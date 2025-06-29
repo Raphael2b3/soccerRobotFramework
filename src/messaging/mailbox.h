@@ -13,7 +13,7 @@
 class Mailbox {
     std::vector<event_t *> mailbox;
     Priority priorityManager;
-    size_t getIndexToInsert();
+    size_t getIndexToInsert(const event_t* event);
 public:
     bool mail(event_t *e);
 };

@@ -10,12 +10,13 @@ add_library(soccerRobotFramework STATIC
         src/messaging/priority.h
         src/types.h
 )
-add_executable(main main.cpp)
-
-target_link_libraries(main PRIVATE soccerRobotFramework)
-
+find_package(ZeroMQ CONFIG REQUIRED)
+target_link_libraries(soccerRobotFramework PUBLIC libzmq libzmq-static)
 find_package(cppzmq CONFIG REQUIRED)
-target_link_libraries(main PRIVATE cppzmq cppzmq-static)
-
+target_link_libraries(soccerRobotFramework PUBLIC cppzmq cppzmq-static)
 find_package(rerun_sdk CONFIG REQUIRED)
-target_link_libraries(main PRIVATE rerun_sdk)
+target_link_libraries(soccerRobotFramework PUBLIC rerun_sdk)
+
+
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE soccerRobotFramework)
