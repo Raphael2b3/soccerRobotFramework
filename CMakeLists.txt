@@ -3,11 +3,11 @@ project(soccerRobotFramework)
 set(CMAKE_CXX_STANDARD 20)
 add_library(soccerRobotFramework STATIC
         src/agent.cpp
-        src/messaging/mailbox.cpp
+        src/messaging/mailbox/mailbox.cpp
         src/messaging/event.h
-        src/messaging/mailbox.h
-        src/messaging/priority.cpp
-        src/messaging/priority.h
+        src/messaging/mailbox/mailbox.h
+        src/messaging/priority/priority.cpp
+        src/messaging/priority/priority.h
         src/types.h
 )
 find_package(ZeroMQ CONFIG REQUIRED)
@@ -17,6 +17,12 @@ target_link_libraries(soccerRobotFramework PUBLIC cppzmq cppzmq-static)
 find_package(rerun_sdk CONFIG REQUIRED)
 target_link_libraries(soccerRobotFramework PUBLIC rerun_sdk)
 
-
+# Run the framework!
 add_executable(main main.cpp)
 target_link_libraries(main PRIVATE soccerRobotFramework)
+
+# Test the framework!
+add_executable(test test.cpp)
+target_link_libraries(test PRIVATE soccerRobotFramework)
+find_package(doctest CONFIG REQUIRED)
+target_link_libraries(test PRIVATE doctest::doctest)

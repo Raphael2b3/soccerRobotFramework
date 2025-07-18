@@ -5,10 +5,9 @@
 #ifndef PRIORITY_H
 #define PRIORITY_H
 #include <map>
-#include "event.h"
-#include "../types.h"
+#include "../event.h"
+#include "../../types.h"
 
-#define DEFAULT_PRIORITY 0
 
 class Priority {
     std::map<sender_id_t, priority_t> priorityTable;
@@ -17,5 +16,6 @@ class Priority {
 
 public:
     bool has_higher_priority(const event_t *event, const event_t *other_event);
+    void set_sender_priority(sender_id_t id, priority_t priority);
 };
 #endif //PRIORITY_H

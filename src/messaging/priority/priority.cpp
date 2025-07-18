@@ -2,8 +2,10 @@
 // Created by guita on 22.06.2025.
 //
 
-#include "priority.h"
+#include "./priority.h"
 #include <stdexcept>
+
+#define DEFAULT_PRIORITY 0
 
 priority_t Priority::get_priority(const sender_id_t &sender_id) {
     if (priorityTable.contains(sender_id)) {
@@ -24,4 +26,9 @@ bool Priority::has_higher_priority(const event_t *event, const event_t *other_ev
     bool sender_priority_is_higher = event_sender_priority > other_event_sender_priority;
 
     return event_priority_is_higher || (event_priority_is_equal && sender_priority_is_higher);
+}
+
+void Priority::set_sender_priority(sender_id_t id, priority_t priority)
+{
+    priorityTable.insert_or_assign(id,priority);
 }

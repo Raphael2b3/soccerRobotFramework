@@ -1,7 +1,3 @@
-//  Hello World server in C++
-//  Binds REP socket to tcp://*:5555
-//  Expects "Hello" from client, replies with "World"
-//
 #include <zmq.hpp>
 #include <string>
 #include <iostream>
@@ -9,11 +5,12 @@
 #include <unistd.h>
 #else
 #include <windows.h>
-
 #define sleep(n)	Sleep(n)
 #endif
 
-int main () {
+
+
+int main() {
     //  Prepare our context and socket
     static const int kNumberOfThreads = 2;
     zmq::context_t context (kNumberOfThreads);

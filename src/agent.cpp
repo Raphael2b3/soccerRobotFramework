@@ -1,9 +1,11 @@
 
-#include "messaging/mailbox.h"
+#include "messaging/mailbox/mailbox.h"
 
-class Agent: public Mailbox{
+class Agent{
 public:
     Agent();
+
+    Mailbox mailbox;
 
     int runtime_id = 0;
 
