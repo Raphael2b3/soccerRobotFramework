@@ -1,5 +1,5 @@
 
-#include "messaging/mailbox/mailbox.h"
+#include "../messaging/mailbox/mailbox.h"
 
 class Agent{
 public:

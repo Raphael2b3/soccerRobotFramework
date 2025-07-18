@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.22.1)
 project(soccerRobotFramework)
 set(CMAKE_CXX_STANDARD 20)
 add_library(soccerRobotFramework STATIC
-        src/agent.cpp
-        src/messaging/mailbox/mailbox.cpp
+        src/types.h
+        src/agent/agent.cpp
+        src/agent/agent.h
         src/messaging/event.h
+        src/messaging/mailbox/mailbox.cpp
         src/messaging/mailbox/mailbox.h
         src/messaging/priority/priority.cpp
         src/messaging/priority/priority.h
-        src/types.h
 )
 find_package(ZeroMQ CONFIG REQUIRED)
 target_link_libraries(soccerRobotFramework PUBLIC libzmq libzmq-static)

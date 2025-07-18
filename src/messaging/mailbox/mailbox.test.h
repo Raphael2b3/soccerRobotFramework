@@ -3,7 +3,7 @@
 //
 #include "./mailbox.h"
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
 TEST_CASE("Mailbox mail basic insertion") {
