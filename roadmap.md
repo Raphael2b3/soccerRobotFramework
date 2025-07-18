@@ -39,5 +39,6 @@
 - Rerun For Logging
 
 
-
 # Done
+- Mailbox logic
+- Priority Logic
