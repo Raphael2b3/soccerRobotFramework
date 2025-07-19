@@ -17,6 +17,8 @@ find_package(cppzmq CONFIG REQUIRED)
 target_link_libraries(soccerRobotFramework PUBLIC cppzmq cppzmq-static)
 find_package(rerun_sdk CONFIG REQUIRED)
 target_link_libraries(soccerRobotFramework PUBLIC rerun_sdk)
+find_package (Boost REQUIRED COMPONENTS headers thread)
+target_link_libraries(soccerRobotFramework PUBLIC Boost::headers Boost::thread)
 
 # Run the framework!
 add_executable(main main.cpp)
