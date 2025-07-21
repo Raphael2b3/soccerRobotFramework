@@ -43,6 +43,14 @@ For each agent you can define:
   A message is an Event that is sent from one Agent to another that has Subscribed to it.
 ...
 # Tutorial
+## Install
+Requirements:
+- vcpkg (opensourcve C/C++ Packagemanager)
+- cmake
+
+### Windows
+### Linux
+### NixOS
 ## Define an Agent
 ### Define Fields
 Watch out for race conditions when accessing fields from multiple Agents. To avoid issues use...
