@@ -5,7 +5,7 @@
 #ifndef PRIORITY_H
 #define PRIORITY_H
 #include <map>
-#include "../event.h"
+#include "../event/event.h"
 #include "../../types.h"
 
 
@@ -15,7 +15,7 @@ class Priority {
     priority_t get_priority(const sender_id_t &sender_id);
 
 public:
-    bool has_higher_priority(const event_t *event, const event_t *other_event);
+    bool has_higher_priority(const Event *event, const Event *other_event);
     void set_sender_priority(sender_id_t id, priority_t priority);
 };
 #endif //PRIORITY_H

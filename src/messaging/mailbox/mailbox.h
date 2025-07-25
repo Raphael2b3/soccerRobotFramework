@@ -4,7 +4,7 @@
 
 #ifndef MAILBOX_H
 #define MAILBOX_H
-#include "../event.h"
+#include "../event/event.h"
 #include "../priority/priority.h"
 #include <vector>
 
@@ -12,9 +12,9 @@
 
 class Mailbox {
     Priority priorityManager;
-    size_t getIndexToInsert(const event_t* event);
+    size_t getIndexToInsert(const Event* event);
 public:
-    std::vector<event_t *> mailbox; // Public for testability
-    bool mail(event_t *e);
+    std::vector<Event *> mailbox; // Public for testability
+    bool mail(Event *e);
 };
 #endif //MAILBOX_H

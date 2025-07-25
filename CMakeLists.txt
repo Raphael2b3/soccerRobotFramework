@@ -3,9 +3,8 @@ project(soccerRobotFramework)
 set(CMAKE_CXX_STANDARD 20)
 add_library(soccerRobotFramework STATIC
         src/types.h
-        src/agent/agent.cpp
         src/agent/agent.h
-        src/messaging/event.h
+        src/messaging/event/event.h
         src/messaging/mailbox/mailbox.cpp
         src/messaging/mailbox/mailbox.h
         src/messaging/priority/priority.cpp
@@ -21,7 +20,8 @@ find_package (Boost REQUIRED COMPONENTS headers thread)
 target_link_libraries(soccerRobotFramework PUBLIC Boost::headers Boost::thread)
 
 # Run the framework!
-add_executable(main main.cpp)
+add_executable(main main.cpp
+        src/messaging/eventlistener/eventlistener.cpp)
 target_link_libraries(main PRIVATE soccerRobotFramework)
 
 # Test the framework!

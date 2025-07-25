@@ -9,9 +9,9 @@
 TEST_CASE("Mailbox mail basic insertion") {
     Mailbox mbox;
 
-    event_t a{0,1,0,nullptr};
-    event_t b{1,2,0,nullptr};
-    event_t c{2,0,0,nullptr};
+    Event a{0,1,0,nullptr};
+    Event b{1,2,0,nullptr};
+    Event c{2,0,0,nullptr};
 
     CHECK(mbox.mail(&a));
     CHECK(mbox.mailbox.size() == 1);
@@ -33,10 +33,10 @@ TEST_CASE("Mailbox mail throws on null event") {
 
 TEST_CASE("Mailbox mail handles full mailbox") {
     Mailbox mbox;
-    event_t dummy{0};
+    Event dummy{0};
 
     for (int i = 0; i < MAX_MAILBOX_SIZE; ++i) {
-        CHECK(mbox.mail(new event_t{i}));
+        CHECK(mbox.mail(new Event{i}));
     }
 
     CHECK_FALSE(mbox.mail(&dummy)); // Should be full now
@@ -46,13 +46,13 @@ TEST_CASE("Mailbox throws if nullptr exists in mailbox (internal check)") {
     class BrokenMailbox : public Mailbox {
     public:
         void insertNullptrForTest() {
-            auto& mb = const_cast<std::vector<event_t*>&>(mailbox);
+            auto& mb = const_cast<std::vector<Event*>&>(mailbox);
             mb.push_back(nullptr);
         }
     };
 
     BrokenMailbox mbox;
     mbox.insertNullptrForTest();
-    event_t new_event{1};
+    Event new_event{1};
     CHECK_THROWS_AS(mbox.mail(&new_event), std::invalid_argument);
 }

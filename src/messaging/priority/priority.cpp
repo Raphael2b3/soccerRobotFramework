@@ -13,7 +13,7 @@ priority_t Priority::get_priority(const sender_id_t &sender_id) {
     }
     return DEFAULT_PRIORITY;
 }
-bool Priority::has_higher_priority(const event_t *event, const event_t *other_event) {
+bool Priority::has_higher_priority(const Event *event, const Event *other_event) {
     if (!event || !other_event) {
         throw std::invalid_argument("Event pointers cannot be null");
     }

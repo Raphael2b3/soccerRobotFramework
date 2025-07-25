@@ -42,6 +42,7 @@ For each agent you can define:
 ## Messages
   A message is an Event that is sent from one Agent to another that has Subscribed to it.
 ...
+
 # Tutorial
 ## Install
 Requirements:
@@ -57,16 +58,60 @@ Watch out for race conditions when accessing fields from multiple Agents. To avo
 
 ### Define Methods
 ### Define Start Behavior
+
+### Singleton or Multiton
+To specify if a Agent should have multiple instances you can specify the max_pool_size like:
+Singleton (Default):
+```c++
+
+class FreshAgent: public Agent<FreshAgent>
+{
+};
+```
+Multiton:
+```c++
+
+class FreshAgent: public Agent<FreshAgent>
+{
+    SET_POOL_SIZE_LIMIT(100)
+};
+```
+
 ### Define Mailbox Size
 ### Define Priority
+### Define Deconstructor
+To release Resources you have allocated, make sure to release them in the Deconstructor like:
+```c++
+class MyAgent : public Agent<MyAgent>
+    {
+        ~MyAgent() override
+        {
+            //Release Ressources
+        }
+    };
+```
+
+### Make Sure to handle lifetime of Agents
+To release Resources you have allocated, make sure to release them in the Deconstructor like:
+```c++
+auto agent = MyAgent::spawnNewAgent();
+agent.kill() // Releases all resources and the object becomes unusable and will crash your program.
+```
 
 ## Define Events
 ## Subscribe to Events in Agents
 ## Emit Events
 ## Call Methods on Agents
+
+## Load Balancing
+
+## Distribution of Agents across multiple machines
+
 ## Debugging and Logging
 ## Writing Unit tests
 
 
+# Decisions
 
-...
+- We use boost:thread instead of std::thread, because boost:thread allows to interrupt threads, which is necessary for the Agent framework to work properly.
+- We use ZeroMQ as Message Broker, because it handles the asynchronous communication between Agents.
