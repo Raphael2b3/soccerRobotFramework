@@ -3,12 +3,21 @@ project(soccerRobotFramework)
 set(CMAKE_CXX_STANDARD 20)
 add_library(soccerRobotFramework STATIC
         src/types.h
+        src/id/id.h
         src/agent/agent.h
+        src/agent/iagent.h
+        src/agent/pool/pool.h
         src/messaging/event/event.h
+        src/messaging/event/baseevent.h
         src/messaging/mailbox/mailbox.cpp
         src/messaging/mailbox/mailbox.h
         src/messaging/priority/priority.cpp
         src/messaging/priority/priority.h
+
+
+)
+target_include_directories(soccerRobotFramework PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 find_package(ZeroMQ CONFIG REQUIRED)
 target_link_libraries(soccerRobotFramework PUBLIC libzmq libzmq-static)
@@ -20,12 +29,11 @@ find_package (Boost REQUIRED COMPONENTS headers thread)
 target_link_libraries(soccerRobotFramework PUBLIC Boost::headers Boost::thread)
 
 # Run the framework!
-add_executable(main main.cpp
-        src/messaging/eventlistener/eventlistener.cpp)
+add_executable(main main.cpp)
 target_link_libraries(main PRIVATE soccerRobotFramework)
 
 # Test the framework!
 add_executable(test test.cpp)
-target_link_libraries(test PRIVATE soccerRobotFramework)
+target_link_libraries(test PUBLIC soccerRobotFramework)
 find_package(doctest CONFIG REQUIRED)
 target_link_libraries(test PRIVATE doctest::doctest)

@@ -1,16 +1,16 @@
 //
 // Created by guita on 20.06.2025.
 //
-#include "./mailbox.h"
 #include <stdexcept>
-#include <iostream>
+#include "messaging/mailbox/mailbox.h"
+#include "messaging/event/event.h"
 
 
 
-size_t Mailbox::getIndexToInsert(const Event *event) {
+size_t Mailbox::getIndexToInsert(const BaseEvent *event) {
 
     for (size_t i = mailbox.size(); i > 0; --i) {
-        Event* other_event = mailbox[i-1];
+        BaseEvent* other_event = mailbox[i-1];
         if (other_event == nullptr) {
             throw std::invalid_argument("There shouldn't be a nullptr in mailbox");
         }
@@ -22,7 +22,7 @@ size_t Mailbox::getIndexToInsert(const Event *event) {
     return 0; // For now, just append to the end
 }
 
-bool Mailbox::mail(Event *event) {
+bool Mailbox::mail(BaseEvent *event) {
 
     if (!event) {
         throw std::invalid_argument("Event pointer cannot be null");
@@ -35,9 +35,9 @@ bool Mailbox::mail(Event *event) {
 
     mailbox.insert(mailbox.cbegin()+index, event);
 
-    Event* last_elem = mailbox.at(index);
+    BaseEvent* last_elem = mailbox.at(index);
 
-    if (last_elem == nullptr || *last_elem != *event){
+    if (last_elem == nullptr || last_elem != event){
         throw std::runtime_error("Failed to insert event into mailbox");
     }
 

@@ -4,36 +4,74 @@
 
 #ifndef EVENT_H
 #define EVENT_H
-#include "../../types.h"
+#include <vector>
+#include <doctest/doctest.h>
 
-class Event
+#include "types.h"
+#include "agent/agent.h"
+#include "baseevent.h"
+
+template <typename T>
+class Event : public BaseEvent
 {
-
 public:
-    static void subscribe()
-    {
+    inline static std::map<AgentId, IAgent*> subscribers;
+    inline static bool initialized = false;
 
+    static void initialize()
+    {
+        if (initialized)
+            return;
+        initialized = true;
     }
-    static void unsubscribe()
-    {
 
+    static void subscribe(IAgent* agent)
+    {
+        subscribers[agent->runtime_id] = agent;
     }
-    static void emit(Event e)
-    {
 
+    static void unsubscribe(IAgent* agent)
+    {
+        subscribers.erase(agent->runtime_id);
     }
-    sender_id_t sender_id = 0;
-    priority_t priority = 0;
-    int data_size = 0;
-    void* data = nullptr;
-
-    bool operator==(const Event& other) const
+    static void emit(IAgent* agent, T* e)
     {
-        return sender_id == other.sender_id
-        && priority == other.priority
-        && data_size == other.data_size
-        && data == other.data;
+        for (auto it = subscribers.begin(); it != subscribers.end(); ++it)
+        {
+            it->second->mailbox.mail(e);
+        }
+
     }
 };
 
+/*class EventListener {
+
+public:
+    template <typename T>
+    void on(std::function<void(const T&)> callback) {
+        static_assert(std::is_base_of<Event, T>::value, "T must derive from Event");
+
+        // Lambda wrapper für Polymorphismus
+        std::function<void(const Event&)> wrapper = [callback](const Event& e) {
+            callback(static_cast<const T&>(e));
+        };
+
+        handlers[typeid(T)].push_back(wrapper);
+    }
+
+    void emit(const Event& event) {
+        auto it = handlers.find(typeid(event));
+        if (it != handlers.end()) {
+            for (auto& handler : it->second) {
+                handler(event);
+            }
+        }
+    }
+
+private:
+    std::unordered_map<std::type_index, std::vector<std::function<void(const Event&)>>> handlers;
+};
+
+
+*/
 #endif //EVENT_H

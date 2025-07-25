@@ -1,17 +1,17 @@
 //
 // Created by guita on 18.07.2025.
 //
-#include "./mailbox.h"
-
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
+#include "messaging/mailbox/mailbox.h"
+#include "messaging/event/event.h"
 
 TEST_CASE("Mailbox mail basic insertion") {
     Mailbox mbox;
 
-    Event a{0,1,0,nullptr};
-    Event b{1,2,0,nullptr};
-    Event c{2,0,0,nullptr};
+    BaseEvent a{AgentId::getNewId("test"),1,0,nullptr};
+    BaseEvent b{AgentId::getNewId("test"),2,0,nullptr};
+    BaseEvent c{AgentId::getNewId("test"),0,0,nullptr};
 
     CHECK(mbox.mail(&a));
     CHECK(mbox.mailbox.size() == 1);
@@ -33,10 +33,10 @@ TEST_CASE("Mailbox mail throws on null event") {
 
 TEST_CASE("Mailbox mail handles full mailbox") {
     Mailbox mbox;
-    Event dummy{0};
+    BaseEvent dummy{AgentId::getNewId("test")};
 
     for (int i = 0; i < MAX_MAILBOX_SIZE; ++i) {
-        CHECK(mbox.mail(new Event{i}));
+        CHECK(mbox.mail(new BaseEvent{AgentId::getNewId("test")}));
     }
 
     CHECK_FALSE(mbox.mail(&dummy)); // Should be full now
@@ -46,13 +46,13 @@ TEST_CASE("Mailbox throws if nullptr exists in mailbox (internal check)") {
     class BrokenMailbox : public Mailbox {
     public:
         void insertNullptrForTest() {
-            auto& mb = const_cast<std::vector<Event*>&>(mailbox);
+            auto& mb = const_cast<std::vector<BaseEvent*>&>(mailbox);
             mb.push_back(nullptr);
         }
     };
 
     BrokenMailbox mbox;
     mbox.insertNullptrForTest();
-    Event new_event{1};
+    BaseEvent new_event{AgentId::getNewId("test")};
     CHECK_THROWS_AS(mbox.mail(&new_event), std::invalid_argument);
 }

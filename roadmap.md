@@ -8,6 +8,13 @@
 - Autocompletion for available events and typing
 - Mailbox for each Agent-Instance
 
+## Backend-Plugin Architecture
+- Communication VIA ZmQ
+- In Prozess
+- Audio Speaker...
+- Bluetooth
+
+Channels-Loadbalancer...
 
 ## Agent Features
 - Singleton

@@ -5,17 +5,17 @@
 #ifndef PRIORITY_H
 #define PRIORITY_H
 #include <map>
-#include "../event/event.h"
-#include "../../types.h"
-
+#include "types.h"
+#include "id/id.h"
+#include "messaging/event/baseevent.h"
 
 class Priority {
-    std::map<sender_id_t, priority_t> priorityTable;
+    std::map<AgentId, priority_t> priorityTable;
 
-    priority_t get_priority(const sender_id_t &sender_id);
+    priority_t get_priority(const AgentId &sender_id);
 
 public:
-    bool has_higher_priority(const Event *event, const Event *other_event);
-    void set_sender_priority(sender_id_t id, priority_t priority);
+    bool has_higher_priority(const BaseEvent *event, const BaseEvent *other_event);
+    void set_sender_priority(AgentId id, priority_t priority);
 };
 #endif //PRIORITY_H

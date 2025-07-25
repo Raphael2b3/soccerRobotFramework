@@ -2,18 +2,18 @@
 // Created by guita on 22.06.2025.
 //
 
-#include "./priority.h"
+#include "messaging/priority/priority.h"
 #include <stdexcept>
-
+#include "messaging/event/event.h"
 #define DEFAULT_PRIORITY 0
 
-priority_t Priority::get_priority(const sender_id_t &sender_id) {
+priority_t Priority::get_priority(const AgentId &sender_id) {
     if (priorityTable.contains(sender_id)) {
         return priorityTable[sender_id];
     }
     return DEFAULT_PRIORITY;
 }
-bool Priority::has_higher_priority(const Event *event, const Event *other_event) {
+bool Priority::has_higher_priority(const BaseEvent *event, const BaseEvent *other_event) {
     if (!event || !other_event) {
         throw std::invalid_argument("Event pointers cannot be null");
     }
@@ -28,7 +28,7 @@ bool Priority::has_higher_priority(const Event *event, const Event *other_event)
     return event_priority_is_higher || (event_priority_is_equal && sender_priority_is_higher);
 }
 
-void Priority::set_sender_priority(sender_id_t id, priority_t priority)
+void Priority::set_sender_priority(AgentId id, priority_t priority)
 {
     priorityTable.insert_or_assign(id,priority);
 }
