@@ -5,6 +5,7 @@
 #ifndef IAGENT_H
 #define IAGENT_H
 
+#include "eventhandler/eventhandler.h"
 #include "id/id.h"
 #include "messaging/mailbox/mailbox.h"
 
@@ -14,6 +15,7 @@ class IAgent
 public:
     Mailbox mailbox;
     AgentId runtime_id;
+    EventHandler event_handler;
     std::atomic<bool> running = true;
 
     virtual void init()
@@ -26,10 +28,7 @@ public:
 
     virtual ~IAgent() = default;
 
-    /**
-     *  Delete this object. Dont use it after killing it.
-     * @return
-     */
+
     virtual void kill()
     {
     };
@@ -45,9 +44,10 @@ public:
     };
 
     template <typename T>
-    void on(std::function<void(T*)> callback)
+    void on(std::function<void(const T&)> callback)
     {
-        T::subscribe(this, callback);
+        T::subscribe(this);
+        event_handler.register_callback<T>(callback);
     }
 };
 #endif //IAGENT_H

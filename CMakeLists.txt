@@ -13,6 +13,7 @@ add_library(soccerRobotFramework STATIC
         src/messaging/mailbox/mailbox.h
         src/messaging/priority/priority.cpp
         src/messaging/priority/priority.h
+        src/eventhandler/eventhandler.h
 
 
 )
@@ -33,7 +34,8 @@ add_executable(main main.cpp)
 target_link_libraries(main PRIVATE soccerRobotFramework)
 
 # Test the framework!
-add_executable(test test.cpp)
+add_executable(test test.cpp
+        src/agent/pool/pool.test.h)
 target_link_libraries(test PUBLIC soccerRobotFramework)
 find_package(doctest CONFIG REQUIRED)
 target_link_libraries(test PRIVATE doctest::doctest)

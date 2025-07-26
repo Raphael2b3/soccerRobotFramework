@@ -19,10 +19,10 @@ class TestAgent : public Agent<TestAgent>
 TEST_CASE("Agent spawning and ID assignment")
 {
     auto a1 = TestAgent::spawnNewAgent();
-    CHECK(&a1 != nullptr);
+    CHECK(a1 != nullptr);
 
     auto a2 = TestAgent::spawnNewAgent();
-    CHECK(&a2 != nullptr);
+    CHECK(a2 != nullptr);
 
     CHECK(a1->runtime_id != a2->runtime_id);
 
@@ -35,10 +35,10 @@ TEST_CASE("Agent ID agent number is counted globally")
     class Agent1:public Agent<Agent1>{};
     class Agent2:public Agent<Agent2>{};
     auto a1 = Agent1::spawnNewAgent();
-    CHECK(&a1 != nullptr);
+    CHECK(a1 != nullptr);
 
     auto a2 = Agent2::spawnNewAgent();
-    CHECK(&a2 != nullptr);
+    CHECK(a2 != nullptr);
 
     CHECK(a1->runtime_id.agent_number != a2->runtime_id.agent_number);
     a1->kill();
@@ -50,7 +50,7 @@ TEST_CASE("Agent retrieval works")
     auto a = TestAgent::spawnNewAgent();
     REQUIRE(a != nullptr);
 
-    auto fetched = TestAgent::getAgent(a->runtime_id);
+    auto fetched = TestAgent::pool.getAgent(a->runtime_id);
     CHECK(fetched == a);
     a->kill();
 }
@@ -73,7 +73,7 @@ class FreshAgent: public Agent<FreshAgent>
 TEST_CASE("Agent pool respects limit")
 {
     bool has_failed = false;
-    std::vector<FreshAgent*> agents;
+    std::vector<std::shared_ptr<FreshAgent>> agents;
     for (int i = 0; i < POOL_SIZE_LIMIT+1; ++i)
     {
         auto a = FreshAgent::spawnNewAgent();
@@ -136,20 +136,17 @@ TEST_CASE("Agent should call deconstructor on kill")
     };
 
 
-    auto* agent = AssertingTestAgent2::spawnNewAgent();
+    auto agent = AssertingTestAgent2::spawnNewAgent();
     agent->disposed_flag = disposed;
     agent->kill();
 
     CHECK(*disposed == true);
 }
 
-TEST_CASE("Agent should call deconstructor on deletion")
+TEST_CASE("Agent should call deconstructor when getting out of scope")
 {
-
-    printf("WTF1\n");
     bool disposed = false;
-
-    printf("WTF2\n");
+    {
     class AssertingTestAgent3 : public Agent<AssertingTestAgent3>
     {
     public:
@@ -162,19 +159,42 @@ TEST_CASE("Agent should call deconstructor on deletion")
         }
     };
 
-
-    printf("WTF3\n");
-    auto* agent = AssertingTestAgent3::spawnNewAgent();
-
-    printf("WTF4\n");
+    auto agent = AssertingTestAgent3::spawnNewAgent();
     agent->disposed_flag = &disposed;
-
-    printf("WTF5\n");
-    delete agent;
-
-    printf("WTF6 %d %d \n",disposed,false);
+    }
     CHECK(disposed == true);
-
-    printf("WTF7\n");
 }
 
+TEST_CASE("Killing an Agent should remove it from pool")
+{
+    class AssertingTestAgent3 : public Agent<AssertingTestAgent3>{};
+    //AssertingTestAgent3::max_pool_size = 1;
+
+    auto agent = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent != nullptr);
+    auto agent2 = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent2 == nullptr);
+    agent->kill();
+    auto agent3 = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent3 != nullptr);
+    agent3->kill();
+}
+
+TEST_CASE("Changing max Pool size during runtime has an effect")
+{
+    class AssertingTestAgent3 : public Agent<AssertingTestAgent3>{};
+    AssertingTestAgent3::max_pool_size = 1;
+
+    auto agent = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent != nullptr);
+    auto agent2 = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent2 == nullptr);
+    AssertingTestAgent3::max_pool_size = 2;
+    auto agent3 = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent3 != nullptr);
+    auto agent4 = AssertingTestAgent3::spawnNewAgent();
+    CHECK(agent4 == nullptr);
+    agent->kill();
+    agent3->kill();
+
+}

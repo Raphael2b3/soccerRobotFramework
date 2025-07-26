@@ -76,6 +76,16 @@ class FreshAgent: public Agent<FreshAgent>
     SET_POOL_SIZE_LIMIT(100)
 };
 ```
+#### this can be changed during runtime:
+```c++
+class FreshAgent: public Agent<FreshAgent>
+{
+    SET_POOL_SIZE_LIMIT(100) // Set the maximum number of instances to 100
+};
+// later
+
+FreshAgent::max_pool_size = 50; // Change the maximum number of instances to 50
+```
 
 ### Define Mailbox Size
 ### Define Priority
@@ -92,7 +102,7 @@ class MyAgent : public Agent<MyAgent>
 ```
 
 ### Make Sure to handle lifetime of Agents
-To release Resources you have allocated, make sure to release them in the Deconstructor like:
+To discard an Agent call kill(), this will unregister every resources so the smart pointer will release the agent.
 ```c++
 auto agent = MyAgent::spawnNewAgent();
 agent.kill() // Releases all resources and the object becomes unusable and will crash your program.

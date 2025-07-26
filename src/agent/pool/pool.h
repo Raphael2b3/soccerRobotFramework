@@ -14,23 +14,35 @@ template <typename T>
 class Pool
 {
 public:
-    T* spawnNewAgent();
+    std::shared_ptr<T> spawnNewAgent();
 
-    T* getAgent(agent_id_t id);
+    std::shared_ptr<T> getAgent(AgentId id);
 
-    T* getAgentLoadBalanced();
-    void deleteAgent(agent_id_t id);
+    std::shared_ptr<T> getAgentLoadBalanced();
 
+    void putAgent(std::shared_ptr<T> agent)
+    {
+        if (!agent)
+            return; // Check for null pointer
+        boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+        agent_pool[agent->runtime_id] = agent;
+    }
+
+    void deleteAgent(const AgentId& id)
+    {
+        boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+        agent_pool.erase(id);
+    }
 
 private:
-    std::map<agent_id_t, IAgent*> agent_pool;
-    agent_id_t id_counter = 0;
-    boost::mutex agent_mutex;
+    std::map<AgentId, std::shared_ptr<T>> agent_pool;
+    boost::mutex pool_list_mutex;
+    typename std::map<AgentId, std::shared_ptr<T>>::iterator round_robin_iterator = agent_pool.end();
 };
 
 
 template <typename T>
-T* Pool<T>::spawnNewAgent()
+std::shared_ptr<T> Pool<T>::spawnNewAgent()
 {
     //TODO Maby even spawn on different Machine?
     if (agent_pool.size() >= T::max_pool_size)
@@ -38,60 +50,46 @@ T* Pool<T>::spawnNewAgent()
         //printf("Agent pool is full, cannot spawn new agent.\n");
         return nullptr; // Pool is full
     }
-    auto agent = new T();
-    internal_init(agent);
+    auto agent = std::make_shared<T>();
+    auto newId = AgentId::getNewId(T::agent_name); // TODO check return value
+    agent->runtime_id = newId;
+
+    agent_pool[agent->runtime_id] = agent;
     return agent; // caller responsible for managing memory
 }
 
 template <typename T>
-T* Pool<T>::getAgent(int id)
+std::shared_ptr<T> Pool<T>::getAgent(AgentId id)
 {
-    boost::lock_guard<boost::mutex> lock(agent_mutex);
+    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
     auto it = agent_pool.find(id);
     if (it != agent_pool.end())
     {
-        return static_cast<T*>(it->second);
+        return static_cast<std::shared_ptr<T>>(it->second);
     }
     return nullptr;
 }
 
 template <typename T>
-T* Pool<T>::getAgentLoadBalanced()
+std::shared_ptr<T> Pool<T>::getAgentLoadBalanced()
 {
-    //TODO Implement Round Robin
-    //TODO needs testage
-    return nullptr;
+    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+
+    if (agent_pool.empty())
+        return nullptr;
+
+    // Initialize iterator if not set or invalid
+    if (round_robin_iterator == agent_pool.end())
+        round_robin_iterator = agent_pool.begin();
+    else
+        ++round_robin_iterator;
+
+    // Wrap around
+    if (round_robin_iterator == agent_pool.end())
+        round_robin_iterator = agent_pool.begin();
+
+    return static_cast<std::shared_ptr<T>>(round_robin_iterator->second);
 }
 
-template <typename T>
-void Pool<T>::kill()
-{
-    mailbox_handler_thread.interrupt();
-    main_thread.interrupt();
-    boost::lock_guard<boost::mutex> lock(agent_mutex);
-    agent_pool.erase(runtime_id);
-    delete this;
-}
 
-template <typename T>
-void Pool<T>::internal_init(T* agent)
-{
-    agent->runtime_id = T::id_counter++;
-    agent->init();
-    // Start main thread
-    agent->main_thread = boost::thread(&T::main, agent);
-
-    // Start "other stuff" thread (loops forever)
-    agent->mailbox_handler_thread = boost::thread([agent]()
-    {
-        while (true)
-        {
-            boost::this_thread::sleep_for(boost::chrono::seconds(1));
-            printf("Agent %d is doing other stuff...\n", agent->runtime_id);
-        }
-    });
-    boost::lock_guard<boost::mutex> lock(T::agent_mutex);
-
-    agent_pool[agent->runtime_id] = agent;
-}
 #endif //POOL_H

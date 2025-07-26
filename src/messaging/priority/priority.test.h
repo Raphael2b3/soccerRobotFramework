@@ -2,7 +2,7 @@
 // Created by guita on 22.06.2025.
 //
 
-#include "./priority.h"
+#include "messaging/priority/priority.h"
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
