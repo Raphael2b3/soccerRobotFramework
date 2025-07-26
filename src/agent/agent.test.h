@@ -10,9 +10,9 @@
 #include <vector>
 #include "agent/agent.h"
 
-class TestAgent : public Agent<TestAgent>
+DEFINE_AGENT(TestAgent)
 {
-    SET_POOL_SIZE_LIMIT(30)
+    DEFINE_POOL_SIZE(50)
 };
 
 
@@ -32,8 +32,12 @@ TEST_CASE("Agent spawning and ID assignment")
 
 TEST_CASE("Agent ID agent number is counted globally")
 {
-    class Agent1:public Agent<Agent1>{};
-    class Agent2:public Agent<Agent2>{};
+    DEFINE_AGENT(Agent1)
+    {
+    };
+    DEFINE_AGENT(Agent2)
+    {
+    };
     auto a1 = Agent1::spawnNewAgent();
     CHECK(a1 != nullptr);
 
@@ -50,7 +54,7 @@ TEST_CASE("Agent retrieval works")
     auto a = TestAgent::spawnNewAgent();
     REQUIRE(a != nullptr);
 
-    auto fetched = TestAgent::pool.getAgent(a->runtime_id);
+    auto fetched = TestAgent::getAgent(a->runtime_id);
     CHECK(fetched == a);
     a->kill();
 }
@@ -65,16 +69,16 @@ TEST_CASE("Agent kill interrupts threads")
 }
 
 #define POOL_SIZE_LIMIT 10
-class FreshAgent: public Agent<FreshAgent>
+DEFINE_AGENT(FreshAgent)
 {
-    SET_POOL_SIZE_LIMIT(POOL_SIZE_LIMIT)
+    DEFINE_POOL_SIZE(POOL_SIZE_LIMIT)
 };
 
 TEST_CASE("Agent pool respects limit")
 {
     bool has_failed = false;
     std::vector<std::shared_ptr<FreshAgent>> agents;
-    for (int i = 0; i < POOL_SIZE_LIMIT+1; ++i)
+    for (int i = 0; i < POOL_SIZE_LIMIT + 1; ++i)
     {
         auto a = FreshAgent::spawnNewAgent();
         if (!a)
@@ -95,7 +99,7 @@ TEST_CASE("Agent pool respects limit")
 
 TEST_CASE("Agent should call init before main")
 {
-    class AssertingTestAgent1 : public Agent<AssertingTestAgent1>
+    DEFINE_AGENT(AssertingTestAgent1)
     {
     public:
         bool initialized = false;
@@ -114,17 +118,19 @@ TEST_CASE("Agent should call init before main")
     };
 
     auto agent = AssertingTestAgent1::spawnNewAgent();
-    _sleep(100); //it takes some time for tha main thread to start
+    // _sleep(100); //it takes some time for tha main thread to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     CHECK(agent->main_thread_started == true);
     agent->kill();
 }
 
 
-TEST_CASE("Agent should call deconstructor on kill")
+TEST_CASE("Agent should not call deconstructor on kill")
 {
     auto disposed = std::make_shared<bool>(false);
 
-    class AssertingTestAgent2 : public Agent<AssertingTestAgent2>
+
+    DEFINE_AGENT(AssertingTestAgent2)
     {
     public:
         std::shared_ptr<bool> disposed_flag;
@@ -140,34 +146,88 @@ TEST_CASE("Agent should call deconstructor on kill")
     agent->disposed_flag = disposed;
     agent->kill();
 
-    CHECK(*disposed == true);
+    CHECK(*disposed == false);
 }
 
-TEST_CASE("Agent should call deconstructor when getting out of scope")
+
+TEST_CASE("Agent should not call deconstructor when getting out of scope (no kill function run)")
 {
-    bool disposed = false;
+    int disposed = 0;
     {
-    class AssertingTestAgent3 : public Agent<AssertingTestAgent3>
+        DEFINE_AGENT(AssertingTestAgent3)
+        {
+        public:
+            int* disposed_ptr;
+
+            ~AssertingTestAgent3() override
+            {
+                *disposed_ptr = 42; // Set the flag when dispose is called
+            }
+        };
+
+        auto agent = AssertingTestAgent3::spawnNewAgent();
+        agent->disposed_ptr = &disposed;
+    }
+    CHECK(disposed == 0);
+}
+
+
+TEST_CASE("Agent should call deconstructor when kill function was run and then getting out of scope")
+{
+    int disposed = 0;
+    {
+        DEFINE_AGENT(AssertingTestAgent3)
+        {
+        public:
+            int* disposed_ptr;
+
+            ~AssertingTestAgent3() override
+            {
+                *disposed_ptr = 42; // Set the flag when dispose is called
+            }
+        };
+
+        auto agent = AssertingTestAgent3::spawnNewAgent();
+        agent->disposed_ptr = &disposed;
+        agent->kill();
+    }
+    CHECK(disposed == 42);
+}
+
+TEST_CASE("Agent should call deconstructor when getting out of scope and kill function was run from another scope")
+{
+    int disposed = 0;
+    DEFINE_AGENT(AssertingTestAgent3)
     {
     public:
-        bool* disposed_flag;
-
+        int* disposed_ptr;
 
         ~AssertingTestAgent3() override
         {
-            *disposed_flag = true; // Set the flag when dispose is called
+            *disposed_ptr = 42; // Set the flag when dispose is called
         }
     };
-
-    auto agent = AssertingTestAgent3::spawnNewAgent();
-    agent->disposed_flag = &disposed;
+    AgentId id;
+    {
+        auto agent = AssertingTestAgent3::spawnNewAgent();
+        agent->disposed_ptr = &disposed;
+        id = agent->runtime_id; // Store the ID to kill later
     }
-    CHECK(disposed == true);
+    {
+        auto agent = AssertingTestAgent3::getAgent(id);
+        CHECK(agent != nullptr);
+        agent->kill(); // Kill the agent from another scope
+    }
+
+    CHECK(disposed == 42);
 }
+
 
 TEST_CASE("Killing an Agent should remove it from pool")
 {
-    class AssertingTestAgent3 : public Agent<AssertingTestAgent3>{};
+    DEFINE_AGENT(AssertingTestAgent3)
+    {
+    };
     //AssertingTestAgent3::max_pool_size = 1;
 
     auto agent = AssertingTestAgent3::spawnNewAgent();
@@ -182,7 +242,10 @@ TEST_CASE("Killing an Agent should remove it from pool")
 
 TEST_CASE("Changing max Pool size during runtime has an effect")
 {
-    class AssertingTestAgent3 : public Agent<AssertingTestAgent3>{};
+
+    DEFINE_AGENT(AssertingTestAgent3)
+    {
+    };
     AssertingTestAgent3::max_pool_size = 1;
 
     auto agent = AssertingTestAgent3::spawnNewAgent();
@@ -196,5 +259,4 @@ TEST_CASE("Changing max Pool size during runtime has an effect")
     CHECK(agent4 == nullptr);
     agent->kill();
     agent3->kill();
-
 }

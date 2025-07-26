@@ -8,31 +8,25 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "agent/iagent.h"
+
+#define DEFAULT_POOL_SIZE 1
+#define DEFINE_POOL_SIZE(size) \
+public: \
+inline static size_t max_pool_size = size;
 
 template <typename T>
 class Pool
 {
 public:
-    std::shared_ptr<T> spawnNewAgent();
-
     std::shared_ptr<T> getAgent(AgentId id);
 
     std::shared_ptr<T> getAgentLoadBalanced();
 
-    void putAgent(std::shared_ptr<T> agent)
-    {
-        if (!agent)
-            return; // Check for null pointer
-        boost::lock_guard<boost::mutex> lock(pool_list_mutex);
-        agent_pool[agent->runtime_id] = agent;
-    }
+    std::shared_ptr<T> spawnNewAgentIfPoolAllows();
 
-    void deleteAgent(const AgentId& id)
-    {
-        boost::lock_guard<boost::mutex> lock(pool_list_mutex);
-        agent_pool.erase(id);
-    }
+    void putAgent(std::shared_ptr<T> agent);
+
+    void deleteAgent(const AgentId& id);
 
 private:
     std::map<AgentId, std::shared_ptr<T>> agent_pool;
@@ -42,20 +36,33 @@ private:
 
 
 template <typename T>
-std::shared_ptr<T> Pool<T>::spawnNewAgent()
+std::shared_ptr<T> Pool<T>::spawnNewAgentIfPoolAllows()
 {
     //TODO Maby even spawn on different Machine?
     if (agent_pool.size() >= T::max_pool_size)
     {
-        //printf("Agent pool is full, cannot spawn new agent.\n");
         return nullptr; // Pool is full
     }
     auto agent = std::make_shared<T>();
-    auto newId = AgentId::getNewId(T::agent_name); // TODO check return value
-    agent->runtime_id = newId;
-
-    agent_pool[agent->runtime_id] = agent;
+    agent->runtime_id = AgentId::getNewId(T::agent_name);
+    putAgent(agent);
     return agent; // caller responsible for managing memory
+}
+
+template <typename T>
+void Pool<T>::putAgent(std::shared_ptr<T> agent)
+{
+    if (!agent)
+        return; // Check for null pointer
+    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+    agent_pool[agent->runtime_id] = agent;
+}
+
+template <typename T>
+void Pool<T>::deleteAgent(const AgentId& id)
+{
+    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+    agent_pool.erase(id);
 }
 
 template <typename T>
@@ -65,7 +72,7 @@ std::shared_ptr<T> Pool<T>::getAgent(AgentId id)
     auto it = agent_pool.find(id);
     if (it != agent_pool.end())
     {
-        return static_cast<std::shared_ptr<T>>(it->second);
+        return it->second;
     }
     return nullptr;
 }
@@ -88,7 +95,7 @@ std::shared_ptr<T> Pool<T>::getAgentLoadBalanced()
     if (round_robin_iterator == agent_pool.end())
         round_robin_iterator = agent_pool.begin();
 
-    return static_cast<std::shared_ptr<T>>(round_robin_iterator->second);
+    return round_robin_iterator->second;
 }
 
 
