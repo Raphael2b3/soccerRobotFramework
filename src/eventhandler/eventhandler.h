@@ -21,25 +21,30 @@ public:
     template <typename T>
     void register_callback(std::function<void(const T&)> callback) {
         // Wrap to a function taking BaseEvent&
+        assert(callback != nullptr && "Callback cannot be null");
+
         auto wrapper = [callback](const BaseEvent& event) {
             // Safe downcast (you must ensure correct type!)
             callback(static_cast<const T&>(event));
         };
 
-        handlers[typeid(T)].push_back(wrapper);
+        auto type = std::type_index(typeid(T));
+        assert(type != std::type_index(typeid(BaseEvent)) && "Cannot register BaseEvent directly, use derived types");
+        handlers[type].push_back(wrapper);
     }
-
+    template <typename T>
     // Dispatch event to all relevant handlers
-    void dispatch(const BaseEvent& event) {
-        auto it = handlers.find(typeid(event));
+    void dispatch(const T& event) {
+        auto type = std::type_index(typeid(event));
+        assert(type != std::type_index(typeid(BaseEvent)) && "Cannot dispatch BaseEvent directly, use derived types");
+        auto it = handlers.find(type);
         if (it != handlers.end()) {
             for (const auto& handler : it->second) {
+                assert(handler != nullptr && "Handler cannot be null");
                 handler(event);  // Call the wrapped handler
             }
         }
     }
-
-
 };
 
 

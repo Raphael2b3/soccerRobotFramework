@@ -9,21 +9,21 @@
 TEST_CASE("Mailbox mail basic insertion") {
     Mailbox mbox;
 
-    BaseEvent a{AgentId::getNewId("test"),1,0,nullptr};
-    BaseEvent b{AgentId::getNewId("test"),2,0,nullptr};
-    BaseEvent c{AgentId::getNewId("test"),0,0,nullptr};
+    BaseEvent a{AgentId::getNewId("test"),1};
+    BaseEvent b{AgentId::getNewId("test"),2};
+    BaseEvent c{AgentId::getNewId("test"),0};
 
     CHECK(mbox.mail(&a));
     CHECK(mbox.mailbox.size() == 1);
-    CHECK(*(mbox.mailbox[0]) == a);
+    CHECK(mbox.mailbox[0] == a);
 
     CHECK(mbox.mail(&b));  // Higher priority
     CHECK(mbox.mailbox.size() == 2);
-    CHECK(*(mbox.mailbox[0]) == b);  // b inserted before a
+    CHECK(mbox.mailbox[0] == b);  // b inserted before a
 
     CHECK(mbox.mail(&c));  // Lower priority than both
     CHECK(mbox.mailbox.size() == 3);
-    CHECK(*(mbox.mailbox[2]) == c);
+    CHECK(mbox.mailbox[2] == c);
 }
 
 TEST_CASE("Mailbox mail throws on null event") {

@@ -29,6 +29,6 @@ bool Priority::has_higher_priority(const BaseEvent *event, const BaseEvent *othe
 }
 
 void Priority::set_sender_priority(AgentId id, priority_t priority)
-{
+{ // TODO AgentId might not be suitable, i probably want to respect the host_id and the AgentName only the number is irrelevant.
     priorityTable.insert_or_assign(id,priority);
 }

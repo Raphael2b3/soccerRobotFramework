@@ -13,12 +13,10 @@ class BaseEvent
 public:
     AgentId sender_id;
     priority_t priority = 0;
-    int data_size = 0;
-    void* data = nullptr;
 
-    bool operator==(const BaseEvent& event) const
+    bool operator==(const BaseEvent * other) const
     {
-        return sender_id == event.sender_id && priority == event.priority && data_size == event.data_size;
+        return  other != nullptr && other == this;
     }
 };
 

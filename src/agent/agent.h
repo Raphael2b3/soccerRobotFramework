@@ -53,7 +53,7 @@ std::shared_ptr<T> Agent<T>::spawnNewAgent()
     // Start main thread
     agent->main_thread = boost::thread([agent]()
     {
-        if (!agent) return;
+        assert(agent != nullptr && "Agent cannot be null (main thread)");
         agent->main();
     });
     // Start "other stuff" thread (loops forever)
@@ -79,7 +79,6 @@ void Agent<T>::kill()
     main_thread.interrupt();
     mailbox_handler_thread.join(); // <-- Wait for both to stop safely
     main_thread.join();
-
     pool.deleteAgent(this->runtime_id);
 }
 

@@ -15,7 +15,7 @@ template <typename T>
 class Event : public BaseEvent
 {
 public:
-    inline static std::map<AgentId, IAgent*> subscribers;
+    inline static std::map<AgentId, std::shared_ptr<IAgent>> subscribers;
     inline static bool initialized = false;
 
     static void initialize()
@@ -25,16 +25,16 @@ public:
         initialized = true;
     }
 
-    static void subscribe(IAgent* agent)
+    static void subscribe(std::shared_ptr<IAgent> agent)
     {
         subscribers[agent->runtime_id] = agent;
     }
 
-    static void unsubscribe(IAgent* agent)
+    static void unsubscribe(std::shared_ptr<IAgent> agent)
     {
         subscribers.erase(agent->runtime_id);
     }
-    static void emit(IAgent* agent, T* e)
+    static void emit(std::shared_ptr<IAgent> agent, std::shared_ptr<T> e)
     {
         for (auto it = subscribers.begin(); it != subscribers.end(); ++it)
         {

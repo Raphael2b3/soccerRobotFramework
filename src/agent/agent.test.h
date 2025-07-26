@@ -227,8 +227,7 @@ TEST_CASE("Killing an Agent should remove it from pool")
 {
     DEFINE_AGENT(AssertingTestAgent3)
     {
-    };
-    //AssertingTestAgent3::max_pool_size = 1;
+    };  AssertingTestAgent3::max_pool_size = 1;
 
     auto agent = AssertingTestAgent3::spawnNewAgent();
     CHECK(agent != nullptr);

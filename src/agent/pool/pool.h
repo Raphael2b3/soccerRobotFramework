@@ -18,7 +18,7 @@ template <typename T>
 class Pool
 {
 public:
-    std::shared_ptr<T> getAgent(AgentId id);
+    std::shared_ptr<T> getAgent(const AgentId& id);
 
     std::shared_ptr<T> getAgentLoadBalanced();
 
@@ -52,9 +52,8 @@ std::shared_ptr<T> Pool<T>::spawnNewAgentIfPoolAllows()
 template <typename T>
 void Pool<T>::putAgent(std::shared_ptr<T> agent)
 {
-    if (!agent)
-        return; // Check for null pointer
-    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+    assert(agent!=nullptr && "Agent cannot be null  (putAgent)");
+    boost::lock_guard lock(pool_list_mutex);
     agent_pool[agent->runtime_id] = agent;
 }
 
@@ -66,12 +65,13 @@ void Pool<T>::deleteAgent(const AgentId& id)
 }
 
 template <typename T>
-std::shared_ptr<T> Pool<T>::getAgent(AgentId id)
+std::shared_ptr<T> Pool<T>::getAgent(const AgentId& id)
 {
     boost::lock_guard<boost::mutex> lock(pool_list_mutex);
     auto it = agent_pool.find(id);
     if (it != agent_pool.end())
     {
+        assert(it->second != nullptr && "Agent in pool cannot be null (getAgent, in loop)");
         return it->second;
     }
     return nullptr;
@@ -94,7 +94,7 @@ std::shared_ptr<T> Pool<T>::getAgentLoadBalanced()
     // Wrap around
     if (round_robin_iterator == agent_pool.end())
         round_robin_iterator = agent_pool.begin();
-
+    assert(round_robin_iterator->second != nullptr && "Agent in pool cannot be null (getAgentLoadBalanced)");
     return round_robin_iterator->second;
 }
 

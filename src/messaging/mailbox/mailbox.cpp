@@ -5,7 +5,7 @@
 #include "messaging/mailbox/mailbox.h"
 #include "messaging/event/event.h"
 
-
+// TODO Check for memory leaks
 
 size_t Mailbox::getIndexToInsert(const BaseEvent *event) {
 
