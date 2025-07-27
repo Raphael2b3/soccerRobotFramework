@@ -25,12 +25,12 @@ public:
         initialized = true;
     }
 
-    static void subscribe(std::shared_ptr<IAgent> agent)
+    static void subscribe(const std::shared_ptr<IAgent>& agent)
     {
         subscribers[agent->runtime_id] = agent;
     }
 
-    static void unsubscribe(std::shared_ptr<IAgent> agent)
+    static void unsubscribe(const std::shared_ptr<IAgent>& agent)
     {
         subscribers.erase(agent->runtime_id);
     }

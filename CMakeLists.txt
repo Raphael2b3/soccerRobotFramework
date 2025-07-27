@@ -36,7 +36,8 @@ target_link_libraries(main PRIVATE soccerRobotFramework)
 # Test the framework!
 add_executable(test test.cpp
         src/agent/pool/pool.test.h
-        src/eventhandler/eventhandler.test.h)
+        src/eventhandler/eventhandler.test.h
+        src/id/id.test.h)
 target_link_libraries(test PUBLIC soccerRobotFramework)
 find_package(doctest CONFIG REQUIRED)
 target_link_libraries(test PRIVATE doctest::doctest)
