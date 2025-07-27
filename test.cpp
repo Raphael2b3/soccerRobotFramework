@@ -5,6 +5,6 @@
 #include "agent/agent.test.h"
 #include "agent/pool/pool.test.h"
 #include "eventhandler/eventhandler.test.h"
+#include "id/id.test.h"
 #include "messaging/mailbox/mailbox.test.h"
 #include "messaging/priority/priority.test.h"
-#include "id/id.test.h"

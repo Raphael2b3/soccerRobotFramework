@@ -71,6 +71,13 @@ Requirements:
 
 ### NixOS
 
+
+## General
+Always check if pointers are null befor using them.
+Add asserts to your code to ensure that everything is as expected. `<assert.h>`
+Use the `assert` macro to check for conditions that should never happen. This will help you catch bugs early in the development.
+Assertions are not checked in release builds, so you can use them to check for conditions that should never happen in production.
+
 ## Define an Agent
 
 ### Define Fields
@@ -82,11 +89,17 @@ Watch out for race conditions when accessing fields from multiple Agents. To avo
 #### Init Method
 
 Function to call after the Agent is created. But before the Agents Event threads (main and event listener) are started.
+This method is called synchronously. So time consuming operations will slow down the agent creation process.
 
 #### Main Method
 
 Be aware that the main method is called in another thread, that can take some time to start.
+This method is called asynchronously. So you can do time consuming operations here without blocking the Agent creation.
 
+You probably want to add breakpoints to the main method, such as `boost::this_thread::interruption_point();`. So you can 
+cancel the thread if you want to stop the Agent. You need to do this when you use a infinite loop in the main method. 
+Otherwise the Agent will not be disposed.
+         `
 #### Custom Methods
 
 ### Singleton or Multiton
@@ -190,3 +203,32 @@ auto agent1 = RoundRobinTestAgent::pool.getAgentLoadBalanced();
 - The Agent Class is more like Interface for the user to easly interact with it. What spawns the Agent and will handle 
 - the liftime is the Pool. There it will be Possible to spawn new Agents on Other machines. Passing the methods manually is a Design Decision. You could derive from Pool<T> but this is really hard to debug 
 because you cant see the pool. Also it become impossible to hide some functions from the pool to the user. So Pool<T> will be a private static member of the Agent class.
+- 
+- Should i follow the pattern
+```c++
+class MyAgent : public Agent<MyAgent>
+{
+    void init(){
+        on<MyCoolEvent>([](const MyCoolEvent& event) {
+            // Handle the event
+        })
+        emit<MyCoolEvent>(MyCoolEvent{ /* event data */ });
+        
+    }
+};
+```
+or should i follow the pattern
+
+```c++
+class MyAgent : public Agent<MyAgent>
+{
+    void init(){
+        MyCoolEvent.subscribe(this,[](const MyCoolEvent& event) {
+            // Handle the event
+        })
+        MyCoolEvent.emit(MyCoolEvent{ /* event data */ });
+        
+    }
+};
+
+```

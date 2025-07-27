@@ -1,6 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
-#include <chrono>
 #include "id/id.h"
 
 TEST_CASE("AgentId equality and inequality operators") {

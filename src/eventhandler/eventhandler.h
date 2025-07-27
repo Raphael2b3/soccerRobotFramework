@@ -12,7 +12,7 @@
 #include "messaging/event/baseevent.h"
 
 
-class EventHandler {
+class EventHandler { // Instance is per agent instance and will be private.
 public:
     // Map from event type to handlers
     std::map<std::type_index, std::vector<std::function<void(const BaseEvent&)>>> handlers;
@@ -35,6 +35,7 @@ public:
     template <typename T>
     // Dispatch event to all relevant handlers
     void dispatch(const T& event) {
+        assert(event!= nullptr && "Event cannot be null");
         auto type = std::type_index(typeid(event));
         assert(type != std::type_index(typeid(BaseEvent)) && "Cannot dispatch BaseEvent directly, use derived types");
         auto it = handlers.find(type);
