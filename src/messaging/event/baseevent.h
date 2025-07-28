@@ -8,9 +8,8 @@
 #include "id/id.h"
 
 
-class BaseEvent
+struct BaseEvent
 {
-public:
     AgentId sender_id;
     priority_t priority = 0;
 
@@ -18,6 +17,7 @@ public:
         : sender_id(std::move(sender)), priority(p) {}
     BaseEvent() = default;
 
+    virtual ~BaseEvent() = default;
     bool operator==(const BaseEvent * other) const
     {
         return  other != nullptr && other == this;

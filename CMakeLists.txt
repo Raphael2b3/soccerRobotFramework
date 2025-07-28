@@ -39,7 +39,8 @@ add_executable(test test.cpp
         src/eventhandler/eventhandler.test.h
         src/id/id.test.h
         src/messaging/backend/in_memory/in_memory_backend.test.h
-        src/messaging/backend/zmq/zmq_backend.test.h)
+        src/messaging/backend/zmq/zmq_backend.test.h
+        src/messaging/event/event.test.h)
 target_link_libraries(test PUBLIC soccerRobotFramework)
 find_package(doctest CONFIG REQUIRED)
 target_link_libraries(test PRIVATE doctest::doctest)

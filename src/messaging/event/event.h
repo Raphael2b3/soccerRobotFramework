@@ -11,12 +11,12 @@ template <typename T>
 class Event : public BaseEvent
 {
     inline static std::map<AgentId, std::shared_ptr<IAgent>> subscribers;
-    inline static boost::mutex subscribers_mutex;
+    inline static std::mutex subscribers_mutex;
 
 public:
     static void internal_emit(std::shared_ptr<T> event) //TODO find better name for this method
     {
-        boost::lock_guard<boost::mutex> lock(subscribers_mutex);
+        std::lock_guard<std::mutex> lock(subscribers_mutex);
         assert(event != nullptr && "Event cannot be null (emit)");
         for (auto it = subscribers.begin(); it != subscribers.end(); ++it)
         {
@@ -28,14 +28,14 @@ public:
     static void subscribe(const std::shared_ptr<IAgent>& agent)
     {
         (Backend::template init<T>(),...);
-        boost::lock_guard<boost::mutex> lock(subscribers_mutex);
+        std::lock_guard<std::mutex> lock(subscribers_mutex);
         assert(agent != nullptr && "Agent cannot be null (subscribe)");
         subscribers[agent->runtime_id] = agent;
     }
 
     static void unsubscribe(const std::shared_ptr<IAgent>& agent)
     {
-        boost::lock_guard<boost::mutex> lock(subscribers_mutex);
+        std::lock_guard<std::mutex> lock(subscribers_mutex);
         assert(agent != nullptr && "Agent cannot be null (subscribe)");
         subscribers.erase(agent->runtime_id);
     }

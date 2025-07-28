@@ -8,22 +8,28 @@
 
 
 // Dummy event type for testing
-struct TestEvent : public BaseEvent {
+class TestEvent : public BaseEvent
+{
+public:
     int value = 0;
 };
 
 // Another dummy event
-struct OtherEvent : public BaseEvent {
+class OtherEvent : public BaseEvent
+{
+public:
     std::string message;
 };
 
-TEST_CASE("EventHandler registers and dispatches events correctly") {
+TEST_CASE("EventHandler registers and dispatches events correctly")
+{
     EventHandler handler;
 
     bool test_called = false;
     int test_value = 0;
 
-    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent> e) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent> e)
+    {
         test_called = true;
         test_value = e->value;
     });
@@ -37,12 +43,14 @@ TEST_CASE("EventHandler registers and dispatches events correctly") {
     CHECK(test_value == 42);
 }
 
-TEST_CASE("EventHandler does not call handler for unrelated event types") {
+TEST_CASE("EventHandler does not call handler for unrelated event types")
+{
     EventHandler handler;
 
     bool test_called = false;
 
-    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent> e) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent> e)
+    {
         test_called = true;
     });
 
@@ -54,16 +62,19 @@ TEST_CASE("EventHandler does not call handler for unrelated event types") {
     CHECK_FALSE(test_called);
 }
 
-TEST_CASE("EventHandler supports multiple handlers for the same event type") {
+TEST_CASE("EventHandler supports multiple handlers for the same event type")
+{
     EventHandler handler;
 
     int counter = 0;
 
-    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent>) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent>)
+    {
         counter++;
     });
 
-    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent>) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent>)
+    {
         counter++;
     });
 

@@ -4,18 +4,23 @@
 
 #ifndef MAILBOX_H
 #define MAILBOX_H
-#include <vector>
+#include <deque>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/mutex.hpp>
 #include "messaging/priority/priority.h"
 
 #define MAX_MAILBOX_SIZE 1024
 
 class Mailbox {
     Priority priorityManager;
-
-    size_t getIndexToInsert(std::shared_ptr<BaseEvent> event);
+    std::mutex mailbox_mutex;
+    size_t getIndexToInsert(const std::shared_ptr<BaseEvent>& event);
 
 public:
-    std::vector<std::shared_ptr<BaseEvent> > mailbox; // Public for testability
-    bool mail(std::shared_ptr<BaseEvent> e);
+    std::deque<std::shared_ptr<BaseEvent>> mailbox; // Public for testability
+
+    bool mail(const std::shared_ptr<BaseEvent>& e);
+
+    std::shared_ptr<BaseEvent> getNextEvent();
 };
 #endif //MAILBOX_H

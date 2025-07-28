@@ -30,7 +30,7 @@ public:
 
 private:
     std::map<AgentId, std::shared_ptr<T>> agent_pool;
-    boost::mutex pool_list_mutex;
+    std::mutex pool_list_mutex;
     typename std::map<AgentId, std::shared_ptr<T>>::iterator round_robin_iterator = agent_pool.end();
 };
 
@@ -53,21 +53,21 @@ template <typename T>
 void Pool<T>::putAgent(std::shared_ptr<T> agent)
 {
     assert(agent!=nullptr && "Agent cannot be null  (putAgent)");
-    boost::lock_guard lock(pool_list_mutex);
+    std::lock_guard lock(pool_list_mutex);
     agent_pool[agent->runtime_id] = agent;
 }
 
 template <typename T>
 void Pool<T>::deleteAgent(const AgentId& id)
 {
-    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+    std::lock_guard lock(pool_list_mutex);
     agent_pool.erase(id);
 }
 
 template <typename T>
 std::shared_ptr<T> Pool<T>::getAgent(const AgentId& id)
 {
-    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+    std::lock_guard lock(pool_list_mutex);
     auto it = agent_pool.find(id);
     if (it != agent_pool.end())
     {
@@ -80,7 +80,7 @@ std::shared_ptr<T> Pool<T>::getAgent(const AgentId& id)
 template <typename T>
 std::shared_ptr<T> Pool<T>::getAgentLoadBalanced()
 {
-    boost::lock_guard<boost::mutex> lock(pool_list_mutex);
+    std::lock_guard lock(pool_list_mutex);
 
     if (agent_pool.empty())
         return nullptr;

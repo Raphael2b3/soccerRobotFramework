@@ -53,19 +53,25 @@ std::shared_ptr<T> Agent<T>::spawnNewAgent()
     // Start main thread
     agent->main_thread = boost::thread([agent]()
     {
+        return;
         assert(agent != nullptr && "Agent cannot be null (main thread)");
         agent->main();
     });
+    agent->main();
     // Start "other stuff" thread (loops forever)
-    agent->mailbox_handler_thread = boost::thread([]()
+    agent->mailbox_handler_thread = boost::thread([agent]()
     {
         while (1)
         {
             boost::this_thread::interruption_point();
-            // Todo fix that
-            // todo needs testage
-            // auto event = agent.mailbox.mailbox.pop_front(); // pop front doesnt exist
-            // agent.event_handler.dispatch(event);
+            if (!agent)
+            {
+                throw std::runtime_error("Agent cannot be null in mailbox handler thread");
+                return; // Exit thread if agent is null or not running
+            }
+            auto event = agent->mailbox.getNextEvent(); // pop front doesnt exist
+            if (event!= nullptr)
+                agent->event_handler.dispatch(event);
         }
     });
 

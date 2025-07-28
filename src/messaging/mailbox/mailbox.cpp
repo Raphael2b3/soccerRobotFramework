@@ -7,7 +7,7 @@
 
 // TODO Check for memory leaks
 
-size_t Mailbox::getIndexToInsert(std::shared_ptr<BaseEvent> event) {
+size_t Mailbox::getIndexToInsert(const std::shared_ptr<BaseEvent>& event) {
 
     for (size_t i = mailbox.size(); i > 0; --i) {
         std::shared_ptr<BaseEvent> other_event = mailbox[i-1];
@@ -22,7 +22,7 @@ size_t Mailbox::getIndexToInsert(std::shared_ptr<BaseEvent> event) {
     return 0; // For now, just append to the end
 }
 
-bool Mailbox::mail(std::shared_ptr<BaseEvent> event) {
+bool Mailbox::mail(const std::shared_ptr<BaseEvent>& event) {
 
     if (!event) {
         throw std::invalid_argument("Event pointer cannot be null");
@@ -33,7 +33,7 @@ bool Mailbox::mail(std::shared_ptr<BaseEvent> event) {
     }
     size_t index = getIndexToInsert(event);
 
-    mailbox.insert(mailbox.cbegin()+index, event);
+    mailbox.insert(mailbox.cbegin() + index, event);
 
     std::shared_ptr<BaseEvent> last_elem = mailbox.at(index);
 
@@ -42,4 +42,15 @@ bool Mailbox::mail(std::shared_ptr<BaseEvent> event) {
     }
 
     return true;
+}
+
+std::shared_ptr<BaseEvent> Mailbox::getNextEvent()
+{
+    std::lock_guard lock(mailbox_mutex);
+    if (mailbox.empty()) {
+        return nullptr;
+    }
+    auto nextEvent = mailbox.front();
+    mailbox.pop_front();  // Efficient removal from front
+    return nextEvent;
 }

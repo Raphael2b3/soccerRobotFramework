@@ -34,11 +34,10 @@ public:
         assert(type != std::type_index(typeid(BaseEvent)) && "Cannot register BaseEvent directly, use derived types");
         handlers[type].push_back(wrapper);
     }
-    template <typename T>
-    // Dispatch event to all relevant handlers
-    void dispatch(std::shared_ptr<T> event) {
+
+    void dispatch(const std::shared_ptr<BaseEvent>& event) {
         assert(event!= nullptr && "Event cannot be null");
-        auto type = std::type_index(typeid(event));
+        auto type = std::type_index(typeid(*event));
         assert(type != std::type_index(typeid(BaseEvent)) && "Cannot dispatch BaseEvent directly, use derived types");
         auto it = handlers.find(type);
         if (it != handlers.end()) {
