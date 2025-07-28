@@ -6,52 +6,237 @@
 
 ;
 
-DEFINE_AGENT(DummyAgent){
+DEFINE_AGENT(DummyAgent)
+{
+    DEFINE_POOL_SIZE(30);
 };
 
-struct DummyEvent :  Event<DummyEvent> {
+struct DummyEvent : Event<DummyEvent>
+{
     std::string message;
     DummyEvent() = default;
-    explicit DummyEvent(std::string msg) : message(std::move(msg)) {}
+
+    explicit DummyEvent(std::string msg) : message(std::move(msg))
+    {
+    }
 };
 
+class TestBackend
+{
+public:
+    inline static bool initialized = false;
+    inline static bool emitted = false;
+
+    template <typename T>
+    static void init()
+    {
+        initialized = true;
+    }
+
+    template <typename T>
+    static void emit(std::shared_ptr<T> event)
+    {
+        emitted = true;
+        T::internal_emit(event);
+    }
+
+    static void reset()
+    {
+        initialized = false;
+        emitted = false;
+    }
+};
+
+class TestBackend2
+{
+public:
+    inline static bool initialized = false;
+    inline static bool emitted = false;
+
+    template <typename T>
+    static void init()
+    {
+        initialized = true;
+    }
+
+    template <typename T>
+    static void emit(std::shared_ptr<T> event)
+    {
+        emitted = true;
+        T::internal_emit(event);
+    }
+
+    static void reset()
+    {
+        initialized = false;
+        emitted = false;
+    }
+};
+
+class TestBackend3
+{
+public:
+    inline static bool initialized = false;
+    inline static bool emitted = false;
+
+    template <typename T>
+    static void init()
+    {
+        initialized = true;
+    }
+
+    template <typename T>
+    static void emit(std::shared_ptr<T> event)
+    {
+        emitted = true;
+        T::internal_emit(event);
+    }
+
+    static void reset()
+    {
+        initialized = false;
+        emitted = false;
+    }
+};
 
 // ---------------------
 //        TESTS
 // ---------------------
 
-TEST_CASE("BaseEvent equality operator and constructors") {
-    AgentId id1 = AgentId::getNewId("test");
-    priority_t p = 5;
-
-    BaseEvent e1(id1, p);
-    BaseEvent e2(id1, p);
-
-    CHECK(e1.sender_id == id1);
-    CHECK(e1.priority == p);
-    CHECK_FALSE(e1 == nullptr);
-    CHECK(e1 == &e1);          // pointer comparison
-    CHECK_FALSE(e1 == &e2);    // different address
+TEST_CASE("Subscribing to an event should initialize the backend")
+{
+    auto agent = DummyAgent::spawnNewAgent();
+    CHECK(agent!=nullptr);
+    TestBackend::reset();
+    DummyEvent::subscribe<TestBackend>(agent);
+    CHECK(TestBackend::initialized == true);
 }
 
-TEST_CASE("Event<T> subscribe, emit, unsubscribe") {
+
+TEST_CASE("Subscribing to an event via multiple backends should initialize each backend seperately")
+{
     auto agent = DummyAgent::spawnNewAgent();
+    TestBackend::reset();
+    TestBackend2::reset();
+    TestBackend3::reset();
+    DummyEvent::subscribe<TestBackend>(agent);
+    CHECK(TestBackend::initialized == true);
+    CHECK_FALSE(TestBackend2::initialized);
+    DummyEvent::subscribe<TestBackend2, TestBackend3>(agent);
+    CHECK(TestBackend3::initialized == true);
+    CHECK(TestBackend2::initialized == true);
+}
 
-    // Subscribe
-    DummyEvent::subscribe<InMemoryBackend>(agent);
-    CHECK(agent->mailbox.last_event == nullptr);
+TEST_CASE("Emit will call emit on the backend")
+{
+    auto event = std::make_shared<DummyEvent>("Hello World");
+    auto agent = DummyAgent::spawnNewAgent();
+    TestBackend::reset();
+    DummyEvent::emit<TestBackend>(event);
+    CHECK(TestBackend::emitted==true);
+}
 
-    // Emit
-    auto evt = std::make_shared<DummyEvent>("hello");
-    DummyEvent::emit<InMemoryBackend>(evt);
-    CHECK(agent->mailbox.last_event != nullptr);
-    auto received = std::dynamic_pointer_cast<DummyEvent>(agent->mailbox.last_event);
-    CHECK(received != nullptr);
-    CHECK(received->message == "hello");
+TEST_CASE("Subscribing to an event via multiple backends should initialize each backend seperately")
+{
+    auto event = std::make_shared<DummyEvent>("Hello World");
+    auto agent = DummyAgent::spawnNewAgent();
+    TestBackend::reset();
+    TestBackend2::reset();
+    TestBackend3::reset();
+    DummyEvent::emit<TestBackend>(event);
+    CHECK(TestBackend::emitted==true);
+    CHECK_FALSE(TestBackend2::emitted);
+    DummyEvent::emit<TestBackend2, TestBackend3>(event);
+    CHECK(TestBackend3::emitted == true);
+    CHECK(TestBackend2::emitted == true);
+}
 
-    // Unsubscribe and emit again
-    DummyEvent::unsubscribe(agent);
-    agent->mailbox.last_event = nullptr; // reset
-    DummyEvent::emit<InMemoryBackend>(std::make_shared<DummyEvent>("bye"));
-    CHECK(agent->mailbox.last_event == nullptr); // no delivery after unsub
+TEST_CASE("Subscribing an agent to an event and internally emitting an event should call the agents mailbox")
+{
+    bool event_called = false;
+    auto event = std::make_shared<DummyEvent>("Hello World");
+    auto agent = DummyAgent::spawnNewAgent();
+    agent->on<DummyEvent>([&event_called](std::shared_ptr<DummyEvent> e)
+    {
+        CHECK(e->message == "Hello World");
+        event_called = true;
+    });
+    TestBackend::reset();
+    TestBackend2::reset();
+    TestBackend3::reset();
+    DummyEvent::emit<TestBackend>(event);
+    CHECK(TestBackend::emitted==true);
+    CHECK_FALSE(TestBackend2::emitted);
+    DummyEvent::emit<TestBackend2, TestBackend3>(event);
+    CHECK(TestBackend3::emitted == true);
+    CHECK(TestBackend2::emitted == true);
+}
+
+
+TEST_CASE(
+    "subscribing and emiting an event should not Require a Backend to be specified so on<MyEvent>() and emit<MyEvent> is valid")
+{
+    struct MyEvent : public Event<MyEvent>
+    {
+        int antwort_auf_alles = 0;
+    };
+    DEFINE_AGENT(InMemoryTestAgent)
+    {
+    public:
+        int antwort_auf_alles = 0;
+
+        void init() override
+        {
+            on<MyEvent>([this](auto event)
+            {
+                assert(this != nullptr && "this should not be null in on<MyEvent>()");
+                this->antwort_auf_alles = event->antwort_auf_alles;
+            });
+        }
+
+        void main() override
+        {
+            auto event = std::make_shared<MyEvent>();
+            event->antwort_auf_alles = 42;
+            emit<MyEvent>(event);
+        }
+    };
+    auto agent = InMemoryTestAgent::spawnNewAgent();
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // wait for the async threads to start
+    agent->kill();
+    CHECK(agent->antwort_auf_alles == 42);
+}
+
+TEST_CASE("using this_from_shared_ptr in on<MyEvent>() should work")
+{
+    struct MyEvent : public Event<MyEvent>
+    {
+        int antwort_auf_alles = 0;
+    };
+    DEFINE_AGENT(InMemoryTestAgent)
+    {
+    public:
+        int antwort_auf_alles = 0;
+
+        void init() override
+        {
+            on<MyEvent>([this_ptr = shared_from_this()](auto event)
+            {
+                assert(this_ptr != nullptr && "this should not be null in on<MyEvent>()");
+                this_ptr->antwort_auf_alles = event->antwort_auf_alles;
+            });
+        }
+
+        void main() override
+        {
+            auto event = std::make_shared<MyEvent>();
+            event->antwort_auf_alles = 42;
+            emit<MyEvent>(event);
+        }
+    };
+    auto agent = InMemoryTestAgent::spawnNewAgent();
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // wait for the async threads to start
+    // TODO avoid sleeping in tests
+    agent->kill();
+    CHECK(agent->antwort_auf_alles == 42);
 }

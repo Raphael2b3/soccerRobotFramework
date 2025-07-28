@@ -166,6 +166,36 @@ agent.kill() // Releases all resources and the object becomes unusable and will 
 ## Define Events
 
 ## Subscribe to Events in Agents
+when subscribing to an event and you use the this keyword, make sure to check that it will not be null. Or use the this_from_shared_ptr() method to get a shared pointer to the Agent instance.
+
+            
+```c++
+// BAD !!
+on<MyEvent>([this](auto event) {
+    // this could be nullptr
+    this->antwort_auf_alles = event->antwort_auf_alles;
+});
+         
+// GOOD !!
+
+on<MyEvent>([this](auto event) {
+    if (!this) {
+        // Handle the case where this is nullptr
+        return;
+    }
+    this->antwort_auf_alles = event->antwort_auf_alles;
+}); 
+
+// or use the this_from_shared_ptr() method
+
+
+on<MyEvent>([this_ptr = shared_from_this()](auto event)
+{
+    assert(this_ptr != nullptr && "this should not be null in on<MyEvent>()");
+    this_ptr->antwort_auf_alles = event->antwort_auf_alles;
+});
+
+```
 
 ## Emit Events
 

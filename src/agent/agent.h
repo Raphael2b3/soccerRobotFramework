@@ -6,24 +6,27 @@
 #define AGENT_H
 
 #include <boost/thread.hpp>
+
+#include "agentmessaging.h"
 #include "id/id.h"
 #include "iagent.h"
 #include "pool/pool.h"
 
 #define DEFINE_AGENT(name) \
-class name : public Agent<name>
+struct name : public Agent<name>
 
 #define DEFINE_AGENT_NAME(name) \
 public: \
 inline static std::string agent_name = name;
 
 template <typename T>
-class Agent : public IAgent
+class Agent : public AgentMessaging<T>
 {
 
     boost::thread main_thread;
     boost::thread mailbox_handler_thread;
     inline static Pool<T> pool;
+
 public:
     DEFINE_AGENT_NAME("UnkownAgent");
     DEFINE_POOL_SIZE(1);
@@ -40,6 +43,10 @@ public:
 
     void kill() final;
 
+    ~Agent() override
+    {
+        kill();
+    }
 };
 
 
@@ -53,11 +60,9 @@ std::shared_ptr<T> Agent<T>::spawnNewAgent()
     // Start main thread
     agent->main_thread = boost::thread([agent]()
     {
-        return;
         assert(agent != nullptr && "Agent cannot be null (main thread)");
         agent->main();
     });
-    agent->main();
     // Start "other stuff" thread (loops forever)
     agent->mailbox_handler_thread = boost::thread([agent]()
     {
