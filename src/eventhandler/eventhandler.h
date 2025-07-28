@@ -15,17 +15,19 @@
 class EventHandler { // Instance is per agent instance and will be private.
 public:
     // Map from event type to handlers
-    std::map<std::type_index, std::vector<std::function<void(const BaseEvent&)>>> handlers;
+    std::map<std::type_index, std::vector<std::function<void(std::shared_ptr<BaseEvent>)>>> handlers;
 
     // Register a callback for a specific event type T
     template <typename T>
-    void register_callback(std::function<void(const T&)> callback) {
+    void register_callback(std::function<void(std::shared_ptr<T>)> callback) {
         // Wrap to a function taking BaseEvent&
         assert(callback != nullptr && "Callback cannot be null");
 
-        auto wrapper = [callback](const BaseEvent& event) {
-            // Safe downcast (you must ensure correct type!)
-            callback(static_cast<const T&>(event));
+        auto wrapper = [callback](std::shared_ptr<BaseEvent> event) {
+            // Dynamic cast to ensure runtime safety
+            auto typed_event = std::dynamic_pointer_cast<T>(event);
+            assert(typed_event && "Event type mismatch in callback");
+            callback(typed_event);
         };
 
         auto type = std::type_index(typeid(T));
@@ -34,7 +36,7 @@ public:
     }
     template <typename T>
     // Dispatch event to all relevant handlers
-    void dispatch(const T& event) {
+    void dispatch(std::shared_ptr<T> event) {
         assert(event!= nullptr && "Event cannot be null");
         auto type = std::type_index(typeid(event));
         assert(type != std::type_index(typeid(BaseEvent)) && "Cannot dispatch BaseEvent directly, use derived types");

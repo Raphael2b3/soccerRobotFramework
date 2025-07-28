@@ -11,9 +11,11 @@
 
 class Mailbox {
     Priority priorityManager;
-    size_t getIndexToInsert(const BaseEvent* event);
+
+    size_t getIndexToInsert(std::shared_ptr<BaseEvent> event);
+
 public:
-    std::vector<BaseEvent *> mailbox; // Public for testability
-    bool mail(BaseEvent *e);
+    std::vector<std::shared_ptr<BaseEvent> > mailbox; // Public for testability
+    bool mail(std::shared_ptr<BaseEvent> e);
 };
 #endif //MAILBOX_H

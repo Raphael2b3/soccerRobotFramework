@@ -14,6 +14,10 @@ public:
     AgentId sender_id;
     priority_t priority = 0;
 
+    BaseEvent(AgentId sender, priority_t p)
+        : sender_id(std::move(sender)), priority(p) {}
+    BaseEvent() = default;
+
     bool operator==(const BaseEvent * other) const
     {
         return  other != nullptr && other == this;

@@ -23,13 +23,13 @@ TEST_CASE("EventHandler registers and dispatches events correctly") {
     bool test_called = false;
     int test_value = 0;
 
-    handler.register_callback<TestEvent>([&](const TestEvent& e) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent> e) {
         test_called = true;
-        test_value = e.value;
+        test_value = e->value;
     });
 
-    TestEvent event;
-    event.value = 42;
+    auto event = std::make_shared<TestEvent>();
+    event->value = 42;
 
     handler.dispatch(event);
 
@@ -42,12 +42,12 @@ TEST_CASE("EventHandler does not call handler for unrelated event types") {
 
     bool test_called = false;
 
-    handler.register_callback<TestEvent>([&](const TestEvent& e) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent> e) {
         test_called = true;
     });
 
-    OtherEvent event;
-    event.message = "Hello";
+    auto event = std::make_shared<OtherEvent>();
+    event->message = "Hello";
 
     handler.dispatch(event);
 
@@ -59,15 +59,15 @@ TEST_CASE("EventHandler supports multiple handlers for the same event type") {
 
     int counter = 0;
 
-    handler.register_callback<TestEvent>([&](const TestEvent&) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent>) {
         counter++;
     });
 
-    handler.register_callback<TestEvent>([&](const TestEvent&) {
+    handler.register_callback<TestEvent>([&](std::shared_ptr<TestEvent>) {
         counter++;
     });
 
-    TestEvent event;
+    auto event = std::make_shared<TestEvent>();
     handler.dispatch(event);
 
     CHECK(counter == 2);

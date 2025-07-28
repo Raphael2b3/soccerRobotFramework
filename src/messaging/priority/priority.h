@@ -15,7 +15,7 @@ class Priority {
     priority_t get_priority(const AgentId &sender_id);
 
 public:
-    bool has_higher_priority(const BaseEvent *event, const BaseEvent *other_event);
+    bool has_higher_priority(std::shared_ptr<BaseEvent> event, std::shared_ptr<BaseEvent> other_event);
     void set_sender_priority(AgentId id, priority_t priority);
 };
 #endif //PRIORITY_H

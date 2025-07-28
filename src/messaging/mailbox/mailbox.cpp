@@ -7,10 +7,10 @@
 
 // TODO Check for memory leaks
 
-size_t Mailbox::getIndexToInsert(const BaseEvent *event) {
+size_t Mailbox::getIndexToInsert(std::shared_ptr<BaseEvent> event) {
 
     for (size_t i = mailbox.size(); i > 0; --i) {
-        BaseEvent* other_event = mailbox[i-1];
+        std::shared_ptr<BaseEvent> other_event = mailbox[i-1];
         if (other_event == nullptr) {
             throw std::invalid_argument("There shouldn't be a nullptr in mailbox");
         }
@@ -22,7 +22,7 @@ size_t Mailbox::getIndexToInsert(const BaseEvent *event) {
     return 0; // For now, just append to the end
 }
 
-bool Mailbox::mail(BaseEvent *event) {
+bool Mailbox::mail(std::shared_ptr<BaseEvent> event) {
 
     if (!event) {
         throw std::invalid_argument("Event pointer cannot be null");
@@ -35,7 +35,7 @@ bool Mailbox::mail(BaseEvent *event) {
 
     mailbox.insert(mailbox.cbegin()+index, event);
 
-    BaseEvent* last_elem = mailbox.at(index);
+    std::shared_ptr<BaseEvent> last_elem = mailbox.at(index);
 
     if (last_elem == nullptr || last_elem != event){
         throw std::runtime_error("Failed to insert event into mailbox");

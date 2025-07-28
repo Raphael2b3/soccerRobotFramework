@@ -8,3 +8,4 @@
 #include "id/id.test.h"
 #include "messaging/mailbox/mailbox.test.h"
 #include "messaging/priority/priority.test.h"
+#include "messaging/backend/in_memory/in_memory_backend.test.h"

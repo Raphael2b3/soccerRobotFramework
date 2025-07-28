@@ -4,10 +4,6 @@
 
 #ifndef EVENT_H
 #define EVENT_H
-#include <vector>
-#include <doctest/doctest.h>
-
-#include "types.h"
 #include "agent/agent.h"
 #include "baseevent.h"
 
@@ -28,8 +24,10 @@ public:
         }
     }
 
+    template <typename... Backend>
     static void subscribe(const std::shared_ptr<IAgent>& agent)
     {
+        (Backend::template init<T>(),...);
         boost::lock_guard<boost::mutex> lock(subscribers_mutex);
         assert(agent != nullptr && "Agent cannot be null (subscribe)");
         subscribers[agent->runtime_id] = agent;
@@ -42,10 +40,11 @@ public:
         subscribers.erase(agent->runtime_id);
     }
 
-    template <typename Backend>
+    template <typename... Backend>
     static void emit(std::shared_ptr<T> event)
     {
-        Backend::template emit<T>(event);
+        (Backend::template emit<T>(event),...);
     }
 };
+
 #endif //EVENT_H
