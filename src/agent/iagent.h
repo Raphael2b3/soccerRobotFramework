@@ -49,5 +49,12 @@ public:
         T::subscribe(this);
         event_handler.register_callback<T>(callback);
     }
+
+    template <typename Event,typename Backend>
+    void emit( std::shared_ptr<Event> event)
+    {
+        event->sender_id = this->runtime_id;
+        Event::template emit<Backend>(event);
+    }
 };
 #endif //IAGENT_H

@@ -226,9 +226,44 @@ class MyAgent : public Agent<MyAgent>
         MyCoolEvent.subscribe(this,[](const MyCoolEvent& event) {
             // Handle the event
         })
-        MyCoolEvent.emit(MyCoolEvent{ /* event data */ });
+        MyCoolEvent.emit(this,MyCoolEvent{ /* event data */ });
         
     }
 };
 
 ```
+
+- I choose the first pattern because it is more readable and easier to understand.
+
+- An event is a message that can be sent over different backends. So ill follow some kind of a plugin architecture. 
+Where per Event the developer can choose the backend to use. The Question if the backend should be static class or 
+should be an instance. The downside of a instance is that its not that easy to pass to the Event definition. The upside is that its more flexible and 
+can be changed at runtime and is easier to test, and easer to extend.
+1. Static class
+```c++
+
+class MyEvent : public Event<MyEvent, LocalBackend>
+{
+};
+
+
+class MyEvent : public Event<MyEvent, ZmqBackend>
+{
+};
+
+```
+2. Instance
+```c++ 
+class MyEvent : public Event<MyEvent>
+{
+    inline static Backend backend = LocalBackend::getInstance();
+    
+};
+
+class MyEvent : public Event<MyEvent>
+{
+    inline static Backend backend = ZmqBackend::getInstance();
+    
+};
+```
+3. ZeroMQ as default backend if and only if it is faster then hard wireing and directly calling the methods
