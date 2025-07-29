@@ -19,6 +19,7 @@ public:
     static void internal_emit(std::shared_ptr<T> event) //TODO find better name for this method
     {
         // Todo check if another backend has already send the event
+        // TODO only send the event if the backend is the right one for the handler
         std::lock_guard<std::mutex> lock(subscribers_mutex);
         assert(event != nullptr && "Event cannot be null (emit)");
         for (auto it = subscribers.begin(); it != subscribers.end(); ++it)

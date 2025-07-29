@@ -8,7 +8,7 @@
 #include "id/id.h"
 
 
-class BaseEvent
+class BaseEvent // TODO Maby even allow to send less data to trade off priority for data size
 {
 public:
     AgentId sender_id;
