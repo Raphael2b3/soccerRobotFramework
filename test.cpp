@@ -4,6 +4,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "agent/agent.test.h"
 #include "agent/pool/pool.test.h"
+#include "agent/agent_messaging/agent_messaging.test.h"
 #include "eventhandler/eventhandler.test.h"
 #include "id/id.test.h"
 #include "messaging/event/event.test.h"

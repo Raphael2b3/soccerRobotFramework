@@ -14,7 +14,7 @@ add_library(soccerRobotFramework STATIC
         src/messaging/priority/priority.cpp
         src/messaging/priority/priority.h
         src/eventhandler/eventhandler.h
-        src/agent/agentmessaging.h
+        src/agent/agent_messaging/agent_messaging.h
 
 
 )

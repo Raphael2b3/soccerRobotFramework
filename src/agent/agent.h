@@ -7,7 +7,7 @@
 
 #include <boost/thread.hpp>
 
-#include "agentmessaging.h"
+#include "agent_messaging/agent_messaging.h"
 #include "id/id.h"
 #include "iagent.h"
 #include "pool/pool.h"
@@ -90,6 +90,7 @@ void Agent<T>::kill()
     main_thread.interrupt();
     mailbox_handler_thread.join(); // <-- Wait for both to stop safely
     main_thread.join();
+    this->event_handler.clear_all_handlers();
     pool.deleteAgent(this->runtime_id);
 }
 

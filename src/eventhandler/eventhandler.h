@@ -47,6 +47,10 @@ public:
             }
         }
     }
+    // Clear all handlers for a specific event type
+    void clear_all_handlers() {
+        handlers.clear();
+    }
 };
 
 

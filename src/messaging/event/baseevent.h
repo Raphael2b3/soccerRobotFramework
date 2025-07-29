@@ -8,8 +8,9 @@
 #include "id/id.h"
 
 
-struct BaseEvent
+class BaseEvent
 {
+public:
     AgentId sender_id;
     priority_t priority = 0;
 

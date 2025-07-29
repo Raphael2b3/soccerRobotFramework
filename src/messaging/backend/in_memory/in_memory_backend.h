@@ -15,7 +15,8 @@ public:
 
     template<typename T>
     static void emit(std::shared_ptr<T> event) {
-        T::internal_emit(event);
+
+        T::template internal_emit<InMemoryBackend>(event);
     }
 };
 #endif //IN_MEMORY_BACKEND_H

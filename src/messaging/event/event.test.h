@@ -4,19 +4,18 @@
 #include "messaging/event/event.h"
 #include "agent/agent.h"
 
-;
 
-DEFINE_AGENT(DummyAgent)
+DEFINE_AGENT(EventTestAgent)
 {
     DEFINE_POOL_SIZE(30);
 };
 
-struct DummyEvent : Event<DummyEvent>
+struct EventTestEvent : Event<EventTestEvent>
 {
     std::string message;
-    DummyEvent() = default;
+    EventTestEvent() = default;
 
-    explicit DummyEvent(std::string msg) : message(std::move(msg))
+    explicit EventTestEvent(std::string msg) : message(std::move(msg))
     {
     }
 };
@@ -37,7 +36,7 @@ public:
     static void emit(std::shared_ptr<T> event)
     {
         emitted = true;
-        T::internal_emit(event);
+        T::template internal_emit<TestBackend>(event);
     }
 
     static void reset()
@@ -63,7 +62,7 @@ public:
     static void emit(std::shared_ptr<T> event)
     {
         emitted = true;
-        T::internal_emit(event);
+        T::template internal_emit<TestBackend2>(event);
     }
 
     static void reset()
@@ -89,7 +88,7 @@ public:
     static void emit(std::shared_ptr<T> event)
     {
         emitted = true;
-        T::internal_emit(event);
+        T::template internal_emit<TestBackend3>(event);
     }
 
     static void reset()
@@ -105,48 +104,48 @@ public:
 
 TEST_CASE("Subscribing to an event should initialize the backend")
 {
-    auto agent = DummyAgent::spawnNewAgent();
+    auto agent = EventTestAgent::spawnNewAgent();
     CHECK(agent!=nullptr);
     TestBackend::reset();
-    DummyEvent::subscribe<TestBackend>(agent);
+    EventTestEvent::subscribe<TestBackend>(agent);
     CHECK(TestBackend::initialized == true);
 }
 
 
 TEST_CASE("Subscribing to an event via multiple backends should initialize each backend seperately")
 {
-    auto agent = DummyAgent::spawnNewAgent();
+    auto agent = EventTestAgent::spawnNewAgent();
     TestBackend::reset();
     TestBackend2::reset();
     TestBackend3::reset();
-    DummyEvent::subscribe<TestBackend>(agent);
+    EventTestEvent::subscribe<TestBackend>(agent);
     CHECK(TestBackend::initialized == true);
     CHECK_FALSE(TestBackend2::initialized);
-    DummyEvent::subscribe<TestBackend2, TestBackend3>(agent);
+    EventTestEvent::subscribe<TestBackend2, TestBackend3>(agent);
     CHECK(TestBackend3::initialized == true);
     CHECK(TestBackend2::initialized == true);
 }
 
 TEST_CASE("Emit will call emit on the backend")
 {
-    auto event = std::make_shared<DummyEvent>("Hello World");
-    auto agent = DummyAgent::spawnNewAgent();
+    auto event = std::make_shared<EventTestEvent>("Hello World");
+    auto agent = EventTestAgent::spawnNewAgent();
     TestBackend::reset();
-    DummyEvent::emit<TestBackend>(event);
+    EventTestEvent::emit<TestBackend>(event);
     CHECK(TestBackend::emitted==true);
 }
 
 TEST_CASE("Subscribing to an event via multiple backends should initialize each backend seperately")
 {
-    auto event = std::make_shared<DummyEvent>("Hello World");
-    auto agent = DummyAgent::spawnNewAgent();
+    auto event = std::make_shared<EventTestEvent>("Hello World");
+    auto agent = EventTestAgent::spawnNewAgent();
     TestBackend::reset();
     TestBackend2::reset();
     TestBackend3::reset();
-    DummyEvent::emit<TestBackend>(event);
+    EventTestEvent::emit<TestBackend>(event);
     CHECK(TestBackend::emitted==true);
     CHECK_FALSE(TestBackend2::emitted);
-    DummyEvent::emit<TestBackend2, TestBackend3>(event);
+    EventTestEvent::emit<TestBackend2, TestBackend3>(event);
     CHECK(TestBackend3::emitted == true);
     CHECK(TestBackend2::emitted == true);
 }
@@ -154,9 +153,9 @@ TEST_CASE("Subscribing to an event via multiple backends should initialize each 
 TEST_CASE("Subscribing an agent to an event and internally emitting an event should call the agents mailbox")
 {
     bool event_called = false;
-    auto event = std::make_shared<DummyEvent>("Hello World");
-    auto agent = DummyAgent::spawnNewAgent();
-    agent->on<DummyEvent>([&event_called](std::shared_ptr<DummyEvent> e)
+    auto event = std::make_shared<EventTestEvent>("Hello World");
+    auto agent = EventTestAgent::spawnNewAgent();
+    agent->on<EventTestEvent>([&event_called](std::shared_ptr<EventTestEvent> e)
     {
         CHECK(e->message == "Hello World");
         event_called = true;
@@ -164,79 +163,12 @@ TEST_CASE("Subscribing an agent to an event and internally emitting an event sho
     TestBackend::reset();
     TestBackend2::reset();
     TestBackend3::reset();
-    DummyEvent::emit<TestBackend>(event);
+    EventTestEvent::emit<TestBackend>(event);
     CHECK(TestBackend::emitted==true);
     CHECK_FALSE(TestBackend2::emitted);
-    DummyEvent::emit<TestBackend2, TestBackend3>(event);
+    EventTestEvent::emit<TestBackend2, TestBackend3>(event);
     CHECK(TestBackend3::emitted == true);
     CHECK(TestBackend2::emitted == true);
 }
 
 
-TEST_CASE(
-    "subscribing and emiting an event should not Require a Backend to be specified so on<MyEvent>() and emit<MyEvent> is valid")
-{
-    struct MyEvent : public Event<MyEvent>
-    {
-        int antwort_auf_alles = 0;
-    };
-    DEFINE_AGENT(InMemoryTestAgent)
-    {
-    public:
-        int antwort_auf_alles = 0;
-
-        void init() override
-        {
-            on<MyEvent>([this](auto event)
-            {
-                assert(this != nullptr && "this should not be null in on<MyEvent>()");
-                this->antwort_auf_alles = event->antwort_auf_alles;
-            });
-        }
-
-        void main() override
-        {
-            auto event = std::make_shared<MyEvent>();
-            event->antwort_auf_alles = 42;
-            emit<MyEvent>(event);
-        }
-    };
-    auto agent = InMemoryTestAgent::spawnNewAgent();
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // wait for the async threads to start
-    agent->kill();
-    CHECK(agent->antwort_auf_alles == 42);
-}
-
-TEST_CASE("using this_from_shared_ptr in on<MyEvent>() should work")
-{
-    struct MyEvent : public Event<MyEvent>
-    {
-        int antwort_auf_alles = 0;
-    };
-    DEFINE_AGENT(InMemoryTestAgent)
-    {
-    public:
-        int antwort_auf_alles = 0;
-
-        void init() override
-        {
-            on<MyEvent>([this_ptr = shared_from_this()](auto event)
-            {
-                assert(this_ptr != nullptr && "this should not be null in on<MyEvent>()");
-                this_ptr->antwort_auf_alles = event->antwort_auf_alles;
-            });
-        }
-
-        void main() override
-        {
-            auto event = std::make_shared<MyEvent>();
-            event->antwort_auf_alles = 42;
-            emit<MyEvent>(event);
-        }
-    };
-    auto agent = InMemoryTestAgent::spawnNewAgent();
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // wait for the async threads to start
-    // TODO avoid sleeping in tests
-    agent->kill();
-    CHECK(agent->antwort_auf_alles == 42);
-}
