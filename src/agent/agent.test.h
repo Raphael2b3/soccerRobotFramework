@@ -64,7 +64,6 @@ TEST_CASE("Agent kill interrupts threads")
     auto a = TestAgent::spawnNewAgent();
     REQUIRE(a != nullptr);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     a->kill();
 }
 
@@ -101,12 +100,12 @@ TEST_CASE("Agent should call init before main")
 {
     DEFINE_AGENT(AssertingTestAgent1)
     {
-    public:
         bool initialized = false;
         bool main_thread_started = false;
 
         void init() override
         {
+
             initialized = true;
         }
 
@@ -118,8 +117,7 @@ TEST_CASE("Agent should call init before main")
     };
 
     auto agent = AssertingTestAgent1::spawnNewAgent();
-    // _sleep(100); //it takes some time for tha main thread to start
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while (!agent->main_thread_started) {}
     CHECK(agent->main_thread_started == true);
     agent->kill();
 }

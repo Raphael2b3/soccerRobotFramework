@@ -9,7 +9,7 @@
 
 #include "agent_messaging/agent_messaging.h"
 #include "id/id.h"
-#include "iagent.h"
+#include "base_agent.h"
 #include "pool/pool.h"
 
 #define DEFINE_AGENT(name) \

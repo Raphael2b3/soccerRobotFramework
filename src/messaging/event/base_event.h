@@ -8,9 +8,8 @@
 #include "id/id.h"
 
 
-class BaseEvent // TODO Maby even allow to send less data to trade off priority for data size
-{
-public:
+struct BaseEvent // TODO Maby even allow to send less data to trade off priority for data size
+{ // TODO create a nice Event constructor so it is intuitive and easy to use.
     AgentId sender_id;
     priority_t priority = 0;
 

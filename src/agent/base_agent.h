@@ -2,41 +2,35 @@
 // Created by guita on 25.07.2025.
 //
 
-#ifndef IAGENT_H
-#define IAGENT_H
+#ifndef BASE_AGENT_H
+#define BASE_AGENT_H
 
 #include "id/id.h"
 #include "messaging/mailbox/mailbox.h"
-class IAgent
-{
-public:
+
+struct BaseAgent {
     Mailbox mailbox;
     AgentId runtime_id;
     std::atomic<bool> running = true;
 
-    virtual void init()
-    {
+    virtual void init() {
     };
 
-    virtual void main()
-    {
+    virtual void main() {
     };
 
-    virtual ~IAgent() = default;
+    virtual ~BaseAgent() = default;
 
 
-    virtual void kill()
-    {
+    virtual void kill() {
     };
 
-    virtual void pause()
-    {
+    virtual void pause() {
         running = false;
     };
 
-    virtual void resume()
-    {
+    virtual void resume() {
         running = true;
     };
 };
-#endif //IAGENT_H
+#endif //BASE_AGENT_H

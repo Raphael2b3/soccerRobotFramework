@@ -36,7 +36,7 @@ public:
     static void emit(std::shared_ptr<T> event)
     {
         emitted = true;
-        T::template internal_emit<TestBackend>(event);
+        T::template dispatch_event<TestBackend>(event);
     }
 
     static void reset()
@@ -62,7 +62,7 @@ public:
     static void emit(std::shared_ptr<T> event)
     {
         emitted = true;
-        T::template internal_emit<TestBackend2>(event);
+        T::template dispatch_event<TestBackend2>(event);
     }
 
     static void reset()
@@ -88,7 +88,7 @@ public:
     static void emit(std::shared_ptr<T> event)
     {
         emitted = true;
-        T::template internal_emit<TestBackend3>(event);
+        T::template dispatch_event<TestBackend3>(event);
     }
 
     static void reset()

@@ -298,3 +298,8 @@ class MyEvent : public Event<MyEvent>
 };
 ```
 3. ZeroMQ as default backend if and only if it is faster then hard wireing and directly calling the methods
+
+
+---
+4. There will be no feature for defining multiple Events for one on<>() clause because, you wouldnt be able to convert the payload, it could be possible if you would accept void as input parameter but this is really rare.
+   1. not planned : specify backends and Events, all events are first, then there will be the bagends like Event+Event*+Backend*

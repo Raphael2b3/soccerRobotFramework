@@ -9,7 +9,7 @@
 #include <typeindex>
 #include <vector>
 
-#include "messaging/event/baseevent.h"
+#include "messaging/event/base_event.h"
 
 
 class EventHandler { // Instance is per agent instance and will be private.

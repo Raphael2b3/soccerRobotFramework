@@ -38,7 +38,6 @@ private:
 template <typename T>
 std::shared_ptr<T> Pool<T>::spawnNewAgentIfPoolAllows()
 {
-    //TODO Maby even spawn on different Machine?
     if (agent_pool.size() >= T::max_pool_size)
     {
         return nullptr; // Pool is full

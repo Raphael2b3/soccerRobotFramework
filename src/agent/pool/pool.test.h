@@ -3,7 +3,7 @@
 
 #include "pool.h"
 #include "id/id.h"
-#include "agent/iagent.h"
+#include "agent/base_agent.h"
 
 
 DEFINE_AGENT(PoolTest1Agent)

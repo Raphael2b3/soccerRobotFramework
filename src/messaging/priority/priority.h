@@ -7,7 +7,7 @@
 #include <map>
 #include "types.h"
 #include "id/id.h"
-#include "messaging/event/baseevent.h"
+#include "messaging/event/base_event.h"
 
 class Priority {
     std::map<AgentId, priority_t> priorityTable;

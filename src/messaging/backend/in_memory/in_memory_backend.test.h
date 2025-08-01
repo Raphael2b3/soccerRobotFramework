@@ -29,32 +29,11 @@ TEST_CASE("In Memory Backend Should Work using on<MyEvent,InMemoryBackend>(..)")
     };
 
     auto agent = InMemoryTestAgent::spawnNewAgent();
-    std::this_thread::sleep_for(std::chrono::milliseconds(4000)); // wait for the async threads to start
-    agent->kill();
+    while (agent->antwort_auf_alles != 42){}
     CHECK(agent->antwort_auf_alles == 42);
-
+    agent->kill();
 }
 
 TEST_CASE("Benchmark Delay emit -> receive using InMemoryBackend") { // TODO Benchmark Backends
-    DEFINE_AGENT(InMemoryTestAgent) {
-        public:
-        int antwort_auf_alles = 0;
 
-        void init() override {
-            on<MyEvent, InMemoryBackend>([this](auto event) {
-                this->antwort_auf_alles = event->antwort_auf_alles;
-            });
-        }
-
-        void main() override {
-            auto event = std::make_shared<MyEvent>();
-            event->antwort_auf_alles = 42;
-            emit<MyEvent, InMemoryBackend>(event);
-        }
-    };
-
-    auto agent = InMemoryTestAgent::spawnNewAgent();
-    std::this_thread::sleep_for(std::chrono::milliseconds(4000)); // wait for the async threads to start
-    agent->kill();
-    CHECK(agent->antwort_auf_alles == 42);
 }
