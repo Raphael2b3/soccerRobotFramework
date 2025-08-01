@@ -17,6 +17,7 @@ class Mailbox {
     size_t getIndexToInsert(const std::shared_ptr<BaseEvent>& event);
 
 public:
+    int max_mailbox_size = MAX_MAILBOX_SIZE;
     std::deque<std::shared_ptr<BaseEvent>> mailbox; // Public for testability
 
     bool mail(const std::shared_ptr<BaseEvent>& e);

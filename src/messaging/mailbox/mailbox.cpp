@@ -5,8 +5,6 @@
 #include "messaging/mailbox/mailbox.h"
 #include "messaging/event/event.h"
 
-// TODO Check for memory leaks
-
 size_t Mailbox::getIndexToInsert(const std::shared_ptr<BaseEvent>& event) {
 
     for (size_t i = mailbox.size(); i > 0; --i) {
@@ -24,10 +22,11 @@ size_t Mailbox::getIndexToInsert(const std::shared_ptr<BaseEvent>& event) {
 
 bool Mailbox::mail(const std::shared_ptr<BaseEvent>& event) {
 
+    std::lock_guard lock(mailbox_mutex);
     if (!event) {
         throw std::invalid_argument("Event pointer cannot be null");
     }
-    if (mailbox.size() >= MAX_MAILBOX_SIZE) {
+    if (mailbox.size() >= max_mailbox_size) {
         // std::cerr << "Mailbox is full, cannot add new event." << std::endl;
         return false; // Mailbox is full
     }

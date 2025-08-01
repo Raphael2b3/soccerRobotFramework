@@ -68,6 +68,7 @@ void backend_benchmark(int N_agents = benchmark_agents) {
             values.receive_duration = std::chrono::duration_cast<std::chrono::milliseconds>(wait_end - wait_start);
         }
     };
+    BenchmarkAgent::max_pool_size = N_agents;
 
     std::vector<std::shared_ptr<BenchmarkAgent> > agents;
     agents.reserve(N_agents);
@@ -82,10 +83,6 @@ void backend_benchmark(int N_agents = benchmark_agents) {
         agents.push_back(agent);
     }
 
-    // Stoppe alle Agents
-    for (auto &agent: agents) {
-        agent->kill();
-    }
 
     auto global_end = std::chrono::high_resolution_clock::now();
     auto total_runtime = std::chrono::duration_cast<std::chrono::milliseconds>(global_end - global_start);
@@ -117,6 +114,13 @@ void backend_benchmark(int N_agents = benchmark_agents) {
             << "Avg send duration: " << total_send.count() / N_agents << " ms\n"
             << "Avg receive wait: " << total_receive.count() / N_agents << " ms\n"
             << "Avg message latency: " << avg_latency << " ms\n";
+
+
+    // Stoppe alle Agents
+    for (auto &agent: agents) {
+        agent->kill();
+    }
+
 }
 
 #endif // BACKEND_TEST_H

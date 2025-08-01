@@ -3,6 +3,7 @@
 #include "messaging/backend/in_memory/in_memory_backend.h"
 #include "messaging/event/event.h"
 #include "agent/agent.h"
+#include "messaging/backend/backend.testutils.h"
 
 struct MyEvent : public Event<MyEvent> {
     int antwort_auf_alles = 0;
@@ -35,5 +36,5 @@ TEST_CASE("In Memory Backend Should Work using on<MyEvent,InMemoryBackend>(..)")
 }
 
 TEST_CASE("Benchmark Delay emit -> receive using InMemoryBackend") { // TODO Benchmark Backends
-
+    backend_benchmark<InMemoryBackend>();
 }

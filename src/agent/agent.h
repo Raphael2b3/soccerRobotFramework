@@ -42,11 +42,6 @@ public:
     }
 
     void kill() final;
-
-    ~Agent() override
-    {
-        kill();
-    }
 };
 
 
@@ -66,7 +61,7 @@ std::shared_ptr<T> Agent<T>::spawnNewAgent()
     // Start "other stuff" thread (loops forever)
     agent->mailbox_handler_thread = boost::thread([agent]()
     {
-        while (1)
+        while (agent->running)
         {
             boost::this_thread::interruption_point();
             if (!agent)
@@ -86,12 +81,15 @@ std::shared_ptr<T> Agent<T>::spawnNewAgent()
 template <typename T>
 void Agent<T>::kill()
 {
+    this->running = false;
+    this->event_handler.clear_all_handlers();
+    pool.deleteAgent(this->runtime_id);
     mailbox_handler_thread.interrupt();
     main_thread.interrupt();
     mailbox_handler_thread.join(); // <-- Wait for both to stop safely
     main_thread.join();
-    this->event_handler.clear_all_handlers();
-    pool.deleteAgent(this->runtime_id);
+    this->unsubscribe_all();
+
 }
 
 

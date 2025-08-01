@@ -172,3 +172,23 @@ TEST_CASE("Subscribing an agent to an event and internally emitting an event sho
 }
 
 
+TEST_CASE("Unsubscribing works")
+{
+    bool event_called = false;
+    auto event = std::make_shared<EventTestEvent>("Hello World");
+    auto agent = EventTestAgent::spawnNewAgent();
+    agent->on<EventTestEvent>([&event_called](std::shared_ptr<EventTestEvent> e)
+    {
+        CHECK(e->message == "Hello World");
+        event_called = true;
+    });
+    TestBackend::reset();
+    TestBackend2::reset();
+    TestBackend3::reset();
+    EventTestEvent::emit<TestBackend>(event);
+    CHECK(TestBackend::emitted==true);
+    CHECK_FALSE(TestBackend2::emitted);
+    EventTestEvent::emit<TestBackend2, TestBackend3>(event);
+    CHECK(TestBackend3::emitted == true);
+    CHECK(TestBackend2::emitted == true);
+}

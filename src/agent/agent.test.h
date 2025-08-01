@@ -9,15 +9,14 @@
 #include <utility>
 #include <vector>
 #include "agent/agent.h"
+#include "messaging/event/event.h"
 
-DEFINE_AGENT(TestAgent)
-{
+DEFINE_AGENT(TestAgent) {
     DEFINE_POOL_SIZE(50)
 };
 
 
-TEST_CASE("Agent spawning and ID assignment")
-{
+TEST_CASE("Agent spawning and ID assignment") {
     auto a1 = TestAgent::spawnNewAgent();
     CHECK(a1 != nullptr);
 
@@ -30,13 +29,10 @@ TEST_CASE("Agent spawning and ID assignment")
     a2->kill();
 }
 
-TEST_CASE("Agent ID agent number is counted globally")
-{
-    DEFINE_AGENT(Agent1)
-    {
+TEST_CASE("Agent ID agent number is counted globally") {
+    DEFINE_AGENT(Agent1) {
     };
-    DEFINE_AGENT(Agent2)
-    {
+    DEFINE_AGENT(Agent2) {
     };
     auto a1 = Agent1::spawnNewAgent();
     CHECK(a1 != nullptr);
@@ -49,8 +45,7 @@ TEST_CASE("Agent ID agent number is counted globally")
     a2->kill();
 }
 
-TEST_CASE("Agent retrieval works")
-{
+TEST_CASE("Agent retrieval works") {
     auto a = TestAgent::spawnNewAgent();
     REQUIRE(a != nullptr);
 
@@ -59,8 +54,7 @@ TEST_CASE("Agent retrieval works")
     a->kill();
 }
 
-TEST_CASE("Agent kill interrupts threads")
-{
+TEST_CASE("Agent kill interrupts threads") {
     auto a = TestAgent::spawnNewAgent();
     REQUIRE(a != nullptr);
 
@@ -68,20 +62,16 @@ TEST_CASE("Agent kill interrupts threads")
 }
 
 #define POOL_SIZE_LIMIT 10
-DEFINE_AGENT(FreshAgent)
-{
+DEFINE_AGENT(FreshAgent) {
     DEFINE_POOL_SIZE(POOL_SIZE_LIMIT)
 };
 
-TEST_CASE("Agent pool respects limit")
-{
+TEST_CASE("Agent pool respects limit") {
     bool has_failed = false;
-    std::vector<std::shared_ptr<FreshAgent>> agents;
-    for (int i = 0; i < POOL_SIZE_LIMIT + 1; ++i)
-    {
+    std::vector<std::shared_ptr<FreshAgent> > agents;
+    for (int i = 0; i < POOL_SIZE_LIMIT + 1; ++i) {
         auto a = FreshAgent::spawnNewAgent();
-        if (!a)
-        {
+        if (!a) {
             has_failed = true;
             CHECK(i >= POOL_SIZE_LIMIT);
             break;
@@ -90,51 +80,43 @@ TEST_CASE("Agent pool respects limit")
     }
     CHECK(has_failed);
 
-    for (auto a : agents)
-    {
+    for (auto a: agents) {
         a->kill();
     }
 }
 
-TEST_CASE("Agent should call init before main")
-{
-    DEFINE_AGENT(AssertingTestAgent1)
-    {
+TEST_CASE("Agent should call init before main") {
+    DEFINE_AGENT(AssertingTestAgent1) {
         bool initialized = false;
         bool main_thread_started = false;
 
-        void init() override
-        {
-
+        void init() override {
             initialized = true;
         }
 
-        void main() override
-        {
+        void main() override {
             CHECK(initialized == true);
             main_thread_started = true;
         }
     };
 
     auto agent = AssertingTestAgent1::spawnNewAgent();
-    while (!agent->main_thread_started) {}
+    while (!agent->main_thread_started) {
+    }
     CHECK(agent->main_thread_started == true);
     agent->kill();
 }
 
 
-TEST_CASE("Agent should not call deconstructor on kill")
-{
+TEST_CASE("Agent should not call deconstructor on kill") {
     auto disposed = std::make_shared<bool>(false);
 
 
-    DEFINE_AGENT(AssertingTestAgent2)
-    {
+    DEFINE_AGENT(AssertingTestAgent2) {
     public:
         std::shared_ptr<bool> disposed_flag;
 
-        ~AssertingTestAgent2() override
-        {
+        ~AssertingTestAgent2() override {
             *disposed_flag = true; // Set the flag when dispose is called
         }
     };
@@ -148,17 +130,13 @@ TEST_CASE("Agent should not call deconstructor on kill")
 }
 
 
-TEST_CASE("Agent should not call deconstructor when getting out of scope (no kill function run)")
-{
-    int disposed = 0;
-    {
-        DEFINE_AGENT(AssertingTestAgent3)
-        {
+TEST_CASE("Agent should not call deconstructor when getting out of scope (no kill function run)") {
+    int disposed = 0; {
+        DEFINE_AGENT(AssertingTestAgent3) {
         public:
-            int* disposed_ptr;
+            int *disposed_ptr;
 
-            ~AssertingTestAgent3() override
-            {
+            ~AssertingTestAgent3() override {
                 *disposed_ptr = 42; // Set the flag when dispose is called
             }
         };
@@ -170,17 +148,13 @@ TEST_CASE("Agent should not call deconstructor when getting out of scope (no kil
 }
 
 
-TEST_CASE("Agent should call deconstructor when kill function was run and then getting out of scope")
-{
-    int disposed = 0;
-    {
-        DEFINE_AGENT(AssertingTestAgent3)
-        {
+TEST_CASE("Agent should call deconstructor when kill function was run and then getting out of scope") {
+    int disposed = 0; {
+        DEFINE_AGENT(AssertingTestAgent3) {
         public:
-            int* disposed_ptr;
+            int *disposed_ptr;
 
-            ~AssertingTestAgent3() override
-            {
+            ~AssertingTestAgent3() override {
                 *disposed_ptr = 42; // Set the flag when dispose is called
             }
         };
@@ -192,26 +166,21 @@ TEST_CASE("Agent should call deconstructor when kill function was run and then g
     CHECK(disposed == 42);
 }
 
-TEST_CASE("Agent should call deconstructor when getting out of scope and kill function was run from another scope")
-{
+TEST_CASE("Agent should call deconstructor when getting out of scope and kill function was run from another scope") {
     int disposed = 0;
-    DEFINE_AGENT(AssertingTestAgent3)
-    {
+    DEFINE_AGENT(AssertingTestAgent3) {
     public:
-        int* disposed_ptr;
+        int *disposed_ptr;
 
-        ~AssertingTestAgent3() override
-        {
+        ~AssertingTestAgent3() override {
             *disposed_ptr = 42; // Set the flag when dispose is called
         }
     };
-    AgentId id;
-    {
+    AgentId id; {
         auto agent = AssertingTestAgent3::spawnNewAgent();
         agent->disposed_ptr = &disposed;
         id = agent->runtime_id; // Store the ID to kill later
-    }
-    {
+    } {
         auto agent = AssertingTestAgent3::getAgent(id);
         CHECK(agent != nullptr);
         agent->kill(); // Kill the agent from another scope
@@ -221,11 +190,10 @@ TEST_CASE("Agent should call deconstructor when getting out of scope and kill fu
 }
 
 
-TEST_CASE("Killing an Agent should remove it from pool")
-{
-    DEFINE_AGENT(AssertingTestAgent3)
-    {
-    };  AssertingTestAgent3::max_pool_size = 1;
+TEST_CASE("Killing an Agent should remove it from pool") {
+    DEFINE_AGENT(AssertingTestAgent3) {
+    };
+    AssertingTestAgent3::max_pool_size = 1;
 
     auto agent = AssertingTestAgent3::spawnNewAgent();
     CHECK(agent != nullptr);
@@ -237,11 +205,8 @@ TEST_CASE("Killing an Agent should remove it from pool")
     agent3->kill();
 }
 
-TEST_CASE("Changing max Pool size during runtime has an effect")
-{
-
-    DEFINE_AGENT(AssertingTestAgent3)
-    {
+TEST_CASE("Changing max Pool size during runtime has an effect") {
+    DEFINE_AGENT(AssertingTestAgent3) {
     };
     AssertingTestAgent3::max_pool_size = 1;
 
@@ -256,4 +221,47 @@ TEST_CASE("Changing max Pool size during runtime has an effect")
     CHECK(agent4 == nullptr);
     agent->kill();
     agent3->kill();
+}
+
+
+TEST_CASE("Killing an agent even if other agents try to send messages to it works safely") {
+    //TODO this test is flaky, fix it
+    struct BenchmarkEvent : Event<BenchmarkEvent> {
+    };
+
+    // Benchmark-Agent
+    DEFINE_AGENT(BenchmarkAgent) {
+        void init() override {
+            on<BenchmarkEvent>([this](auto event) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            });
+        }
+
+        void main() override {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            for (int i = 0; i < 10; ++i) {
+                auto event = std::make_shared<BenchmarkEvent>();
+                emit<BenchmarkEvent>(event);
+            }
+        }
+    };
+    int N_agents = 100;
+    BenchmarkAgent::max_pool_size = N_agents;
+
+    std::vector<std::shared_ptr<BenchmarkAgent> > agents;
+    agents.reserve(N_agents);
+
+    for (int i = 0; i < N_agents; ++i) {
+        auto agent = BenchmarkAgent::spawnNewAgent();
+        if (agent == nullptr) {
+            throw std::runtime_error("Failed to spawn agent");
+        }
+        agents.push_back(agent);
+    }
+
+    // Stoppe alle Agents
+    for (auto &agent: agents) {
+        agent->kill();
+    }
+    CHECK(true);
 }
